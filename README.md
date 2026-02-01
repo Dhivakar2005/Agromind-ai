@@ -45,7 +45,7 @@
 
 ### 2. Clone Repository
 ```bash
-git clone https://github.com/yourusername/agromind-ai.git
+git clone https://github.com/Dhivakar2005/agromind-ai.git
 cd agromind-ai
 ```
 
@@ -86,25 +86,6 @@ npm run dev
 
 ---
 
-## 🏗 Project Structure
-
-```
-agromind-ai/
-├── backend/                  # FastAPI Backend
-│   ├── ml_models/            # Machine Learning Models
-│   ├── unified_backend.py    # Main API Server
-│   └── farmi.db              # Database
-│
-├── frontend/                 # Modern React/Vite Frontend
-│   ├── public/               # Static Assets
-│   ├── index.html            # Main Entry Point
-│   ├── style.css             # Cinematic Styles
-│   └── app.js                # Application Logic
-│
-└── README.md
-```
-
----
 
 ## 🔧 Troubleshooting
 
@@ -121,7 +102,3 @@ agromind-ai/
 3.  Commit your changes (`git commit -m 'Add NewFeature'`)
 4.  Push to the branch (`git push origin feature/NewFeature`)
 5.  Open a Pull Request
-
----
-
-**Made with ❤️ for the Future of Agriculture.**
