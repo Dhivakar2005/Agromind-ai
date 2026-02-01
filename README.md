@@ -13,13 +13,13 @@
 ### 🌟 Cinematic Experience
 *   **Immersive Design:** Full-screen hero backgrounds with pan-and-zoom animations.
 *   **Glassmorphism:** Frosted glass cards, neon glows, and gradient typography (`Outfit` font).
-*   **Split-Screen Auth:** Modern Sign-In/Sign-Up pages with animated storytelling visuals to the right.
-*   **Responsive:** optimized for Mobile, Tablet, and Desktop.
+*   **Split-Screen Auth:** Modern Sign-In/Sign-Up pages with animated storytelling visuals.
+*   **Responsive:** Optimized for Mobile, Tablet, and Desktop.
 
 ### 🛠 AI-Powered Tools
 1.  **🔍 Pest Doctor:**
-    *   **Visual Detection:** Upload photos of crops to identify pests and diseases (ResNet50).
-    *   **Actionable Reports:** Get detailed, bulleted **Treatment Plans** and **Prevention Guides**.
+    *   **Visual Detection:** Upload photos of crops to identify pests and diseases.
+    *   **Actionable Reports:** Get detailed **Treatment Plans** and **Prevention Guides**.
     *   **Confidence Scores:** Transparent AI confidence metrics.
 
 2.  **🌾 Smart Crop Advisor:**
@@ -27,12 +27,11 @@
     *   **Rich Insights:** Detailed cards showing expected yield, growing duration, and water requirements.
 
 3.  **💬 Farmer Community:**
-    *   **Threaded Discussions:** Ask questions and get threaded answers similar to modern forums.
-    *   **Visual Feed:** Card-based feed with user avatars (initials) and category tags.
-    *   **Interaction:** Like, deleted, and comment on posts in real-time.
+    *   **Threaded Discussions:** Ask questions and get answers in a modern forum layout.
+    *   **Visual Feed:** Card-based feed with user avatars and tags.
 
 4.  **🤖 Voice Assistant:**
-    *   **Multilingual Support:** Speak in Hindi, Tamil, Telugu, etc.
+    *   **Multilingual Support:** Speak in Hindi, Tamil, Telugu, and more.
     *   **Text-to-Speech:** The assistant reads out answers for accessibility.
 
 ---
@@ -41,6 +40,7 @@
 
 ### 1. Prerequisites
 *   Python 3.10+
+*   Node.js (for the Frontend)
 *   Git
 
 ### 2. Clone Repository
@@ -49,31 +49,40 @@ git clone https://github.com/yourusername/agromind-ai.git
 cd agromind-ai
 ```
 
-### 3. Backend Setup
-Agromind uses a unified **FastAPI** backend that serves both the API and the Static Frontend.
-
-```bash
-cd backend
-pip install -r requirements.txt
-```
-*(Dependencies: `fastapi`, `uvicorn`, `python-multipart`, `jinja2`, `pillow`, `torch`, `torchvision`, `pandas`, `scikit-learn`, `easyocr`, `googletrans`)*
-
-### 4. Database
-No manual setup required! **SQLite** (`farmi.db`) is automatically created and initialized on the first run.
-
 ---
 
 ## 🏃‍♂️ Running the Application
 
-1.  **Start the Server:**
-    ```bash
-    cd backend
-    python unified_backend.py
-    ```
+You will need **two terminals** running simultaneously.
 
-2.  **Access the App:**
-    Open your browser and navigate to:
-    👉 **http://127.0.0.1:8000**
+### Terminal 1: Backend (API)
+This powers the AI models and Database.
+
+```bash
+cd backend
+# Install dependencies (First time only)
+pip install -r requirements.txt
+
+# Run Server (Windows)
+py unified_backend.py
+
+# Run Server (Mac/Linux)
+python3 unified_backend.py
+```
+✅ *The backend runs on http://127.0.0.1:8000*
+
+### Terminal 2: Frontend (UI)
+This runs the modern web interface.
+
+```bash
+cd frontend
+# Install dependencies (First time only)
+npm install
+
+# Start Development Server
+npm run dev
+```
+✅ *The frontend runs on http://localhost:3000*
 
 ---
 
@@ -81,31 +90,27 @@ No manual setup required! **SQLite** (`farmi.db`) is automatically created and i
 
 ```
 agromind-ai/
-├── backend/
-│   ├── static/               # Frontend Assets (HTML/CSS/JS)
-│   │   ├── index.html        # Single Page Application Entry
-│   │   ├── style.css         # Cinematic Design System
-│   │   ├── app.js            # Frontend Logic (API Calls, UI Rendering)
-│   │   └── bg.png            # Hero Background
+├── backend/                  # FastAPI Backend
 │   ├── ml_models/            # Machine Learning Models
-│   ├── unified_backend.py    # Main FastAPI Application
-│   └── farmi.db              # SQLite Database (Auto-generated)
+│   ├── unified_backend.py    # Main API Server
+│   └── farmi.db              # Database
+│
+├── frontend/                 # Modern React/Vite Frontend
+│   ├── public/               # Static Assets
+│   ├── index.html            # Main Entry Point
+│   ├── style.css             # Cinematic Styles
+│   └── app.js                # Application Logic
+│
 └── README.md
 ```
 
 ---
 
-## 🧠 Model Training (Optional)
+## 🔧 Troubleshooting
 
-To train the Pest Detection model on custom data:
-
-1.  **Download Dataset:** Get **IP102** (Pests) or **PlantVillage** (Diseases) from Kaggle.
-2.  **Prepare Data:** Extract images to `backend/ml_models/pest_detection/data/raw/`.
-3.  **Run Training:**
-    ```bash
-    cd backend/ml_models/pest_detection/src
-    python train_torch.py
-    ```
+*   **"Python not found":** Try using `py` instead of `python` in your terminal commands.
+*   **"Vite not found":** Make sure you ran `npm install` inside the `frontend` folder first.
+*   **API Errors:** Ensure the backend terminal is open and running properly on port 8000.
 
 ---
 
