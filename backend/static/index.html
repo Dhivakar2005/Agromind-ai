@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agromind AI - Smart Farming Assistant</title>
+    <link rel="stylesheet" href="/static/style.css?v=2">
+</head>
+
+<body>
+    <!-- Landing Page -->
+    <div id="landing-page" class="page active">
+        <div class="hero">
+            <div class="logo">Agromind AI</div>
+            <h1>Smart Farming Made Simple</h1>
+            <p>AI-powered farming assistant for Indian farmers</p>
+            <button onclick="showPage('signup-page')" class="btn-primary">Get Started</button>
+            <button onclick="showPage('signin-page')" class="btn-secondary">Sign In</button>
+        </div>
+    </div>
+
+    <!-- Sign Up Page -->
+    <div id="signup-page" class="page">
+        <div class="auth-container">
+            <div class="auth-card">
+                <h2>Create Account</h2>
+                <form id="signup-form" onsubmit="handleSignup(event)">
+                    <input type="text" id="signup-username" placeholder="Username" required minlength="3"
+                        autocomplete="username">
+                    <input type="email" id="signup-email" placeholder="Email" required autocomplete="email">
+                    <input type="text" id="signup-fullname" placeholder="Full Name (Optional)" autocomplete="name">
+                    <input type="password" id="signup-password" placeholder="Password" required minlength="8"
+                        autocomplete="new-password">
+                    <button type="submit" class="btn-primary">Create Account</button>
+                </form>
+                <p>Already have an account? <a href="#" onclick="showPage('signin-page')">Sign In</a></p>
+                <p><a href="#" onclick="showPage('landing-page')">← Back</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sign In Page -->
+    <div id="signin-page" class="page">
+        <div class="auth-container">
+            <div class="auth-card">
+                <h2>Welcome Back</h2>
+                <form id="signin-form" onsubmit="handleSignin(event)">
+                    <input type="email" id="signin-email" placeholder="Email" required autocomplete="email">
+                    <input type="password" id="signin-password" placeholder="Password" required
+                        autocomplete="current-password">
+                    <button type="submit" class="btn-primary">Sign In</button>
+                </form>
+                <p>Don't have an account? <a href="#" onclick="showPage('signup-page')">Sign Up</a></p>
+                <p><a href="#" onclick="showPage('landing-page')">← Back</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- App Page -->
+    <div id="app-page" class="page">
+        <div class="app-container">
+            <header>
+                <div class="logo">Agromind AI</div>
+                <div class="user-info">
+                    <span id="user-name">Guest</span>
+                    <button onclick="handleSignout()" class="btn-secondary">Sign Out</button>
+                </div>
+            </header>
+
+            <main>
+                <h1>How can I help your farm today?</h1>
+
+                <div class="features">
+                    <div class="feature-card" onclick="showFeature('voice')">
+                        <div class="feature-icon">🎤</div>
+                        <h3>Voice Assistant</h3>
+                        <p>Ask farming questions in your language</p>
+                    </div>
+
+                    <div class="feature-card" onclick="showFeature('pest')">
+                        <div class="feature-icon">🔍</div>
+                        <h3>Detect Disease & Pest</h3>
+                        <p>Identify pests & diseases from photos</p>
+                    </div>
+
+                    <div class="feature-card" onclick="showFeature('crop')">
+                        <div class="feature-icon">🌾</div>
+                        <h3>Crop Advice</h3>
+                        <p>Get crop recommendations</p>
+                    </div>
+
+                    <div class="feature-card" onclick="showPage('community-page')">
+                        <div class="feature-icon">💬</div>
+                        <h3>Community</h3>
+                        <p>Connect with farmers</p>
+                    </div>
+                </div>
+
+                <div id="feature-content" class="feature-content"></div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Community Page -->
+    <div id="community-page" class="page">
+        <div class="app-container">
+            <header>
+                <div class="logo"></div>Agromind AI Community
+        </div>
+        <button onclick="showPage('app-page')" class="btn-secondary">← Back</button>
+        </header>
+
+        <main>
+            <div class="community-header">
+                <h1>Community Forum</h1>
+                <button onclick="showCreatePost()" class="btn-primary">+ New Post</button>
+            </div>
+
+            <div id="posts-container" class="posts-container">
+                <p>Loading posts...</p>
+            </div>
+        </main>
+    </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <script src="/static/app.js?v=9"></script>
+</body>
+
+</html>

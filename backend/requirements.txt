@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+python-multipart
+pydantic
+googletrans==3.1.0a0
+easyocr
+pillow
+joblib
+scikit-learn
+numpy
+requests
+torch
+torchvision
