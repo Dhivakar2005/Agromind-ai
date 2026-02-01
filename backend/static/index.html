@@ -4,55 +4,206 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agromind AI - Smart Farming Assistant</title>
-    <link rel="stylesheet" href="/static/style.css?v=2">
+    <title>Agromind AI - Future of Farming</title>
+    <link rel="stylesheet" href="/static/style.css?v=11">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
 </head>
 
 <body>
-    <!-- Landing Page -->
+    <!-- Landing Page (Cinematic) -->
     <div id="landing-page" class="page active">
-        <div class="hero">
-            <div class="logo">Agromind AI</div>
-            <h1>Smart Farming Made Simple</h1>
-            <p>AI-powered farming assistant for Indian farmers</p>
-            <button onclick="showPage('signup-page')" class="btn-primary">Get Started</button>
-            <button onclick="showPage('signin-page')" class="btn-secondary">Sign In</button>
+        <!-- Hero Section -->
+        <div class="landing-hero">
+            <div class="hero-bg"></div>
+            <div class="hero-overlay"></div>
+            <div class="hero-content">
+                <div class="hero-tagline">AI-POWERED AGRICULTURE</div>
+                <h1>Farming Intelligence<br>Reimagined.</h1>
+                <p>Advanced crop analysis, pest detection, and community wisdom—all in one intelligent interface.</p>
+                <div class="flex gap-2" style="justify-content: center; margin-top: 30px;">
+                    <button onclick="showPage('signup-page')" class="btn-primary"
+                        style="padding: 18px 40px; font-size: 1.1rem;">Start Free Trial</button>
+                    <button onclick="showPage('signin-page')" class="btn-secondary"
+                        style="padding: 18px 40px; font-size: 1.1rem;">Login</button>
+                </div>
+
+                <div class="trust-badges">
+                    <span>99% Accuracy</span>
+                    <span>50k+ Farmers</span>
+                    <span>24/7 AI Support</span>
+                </div>
+            </div>
         </div>
+
+        <!-- How It Works Section -->
+        <div class="landing-section" style="background: linear-gradient(to bottom, #020617 0%, #0f172a 100%);">
+            <div class="app-container">
+                <div class="section-title">
+                    <p style="color: var(--primary); letter-spacing: 2px; font-weight: 600;">WORKFLOW</p>
+                    <h2>How It Works</h2>
+                </div>
+
+                <div class="steps-container">
+                    <div class="step-card">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <div class="icon-box" style="margin: 0 auto 20px;">📸</div>
+                            <h3>Upload</h3>
+                            <p class="text-muted">Take a photo of your crop or soil using your smartphone.</p>
+                        </div>
+                    </div>
+                    <div class="step-card">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <div class="icon-box" style="margin: 0 auto 20px;">🧠</div>
+                            <h3>Analyze</h3>
+                            <p class="text-muted">Our advanced AI scans for pests, diseases, and nutrient deficiencies.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="step-card">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <div class="icon-box" style="margin: 0 auto 20px;">✅</div>
+                            <h3>Resolve</h3>
+                            <p class="text-muted">Get instant, actionable treatment plans and expert advice.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Features Grid -->
+        <div class="landing-section">
+            <div class="app-container">
+                <div class="section-title">
+                    <h2>Why Agromind?</h2>
+                </div>
+                <div class="grid-features-large">
+                    <div class="feature-card-large">
+                        <div class="icon-box">🎙️</div>
+                        <h3>Voice Assistant</h3>
+                        <p class="text-muted mt-4">Speak naturally in your local language. Our AI understands Hindi,
+                            Tamil, Telugu, and more.</p>
+                    </div>
+                    <div class="feature-card-large">
+                        <div class="icon-box">🔍</div>
+                        <h3>Pest Doctor</h3>
+                        <p class="text-muted mt-4">Clinical-grade pest detection with 98% accuracy. Identify issues
+                            before they spread.</p>
+                    </div>
+                    <div class="feature-card-large">
+                        <div class="icon-box">👥</div>
+                        <h3>Farmer Community</h3>
+                        <p class="text-muted mt-4">Connect with thousands of farmers. Share knowledge, ask questions,
+                            and grow together.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer simple -->
+        <footer
+            style="padding: 40px; text-align: center; border-top: 1px solid var(--glass-border); color: var(--text-tertiary);">
+            <p>&copy; 2024 Agromind AI. Empowering Farmers.</p>
+        </footer>
     </div>
 
-    <!-- Sign Up Page -->
+    <!-- Sign Up Page (Split Layout) -->
     <div id="signup-page" class="page">
-        <div class="auth-container">
-            <div class="auth-card">
-                <h2>Create Account</h2>
-                <form id="signup-form" onsubmit="handleSignup(event)">
-                    <input type="text" id="signup-username" placeholder="Username" required minlength="3"
-                        autocomplete="username">
-                    <input type="email" id="signup-email" placeholder="Email" required autocomplete="email">
-                    <input type="text" id="signup-fullname" placeholder="Full Name (Optional)" autocomplete="name">
-                    <input type="password" id="signup-password" placeholder="Password" required minlength="8"
-                        autocomplete="new-password">
-                    <button type="submit" class="btn-primary">Create Account</button>
-                </form>
-                <p>Already have an account? <a href="#" onclick="showPage('signin-page')">Sign In</a></p>
-                <p><a href="#" onclick="showPage('landing-page')">← Back</a></p>
+        <div class="auth-split-wrapper">
+            <!-- Left: Form -->
+            <div class="auth-form-side">
+                <div class="auth-glass-card">
+                    <div style="margin-bottom: 30px;">
+                        <h2 style="font-size: 2rem; margin-bottom: 10px;">Create Account</h2>
+                        <p class="text-muted">Join the future of smart farming today.</p>
+                    </div>
+
+                    <form id="signup-form" onsubmit="handleSignup(event)">
+                        <div class="mb-4">
+                            <label>Username</label>
+                            <input type="text" id="signup-username" placeholder="Choose a unique username" required
+                                minlength="3" autocomplete="username">
+                        </div>
+                        <div class="mb-4">
+                            <label>Email Address</label>
+                            <input type="email" id="signup-email" placeholder="name@example.com" required
+                                autocomplete="email">
+                        </div>
+                        <div class="mb-4">
+                            <label>Full Name</label>
+                            <input type="text" id="signup-fullname" placeholder="Optional" autocomplete="name">
+                        </div>
+                        <div class="mb-4">
+                            <label>Password</label>
+                            <input type="password" id="signup-password" placeholder="Min. 8 characters" required
+                                minlength="8" autocomplete="new-password">
+                        </div>
+                        <button type="submit" class="btn-primary w-100" style="padding: 16px;">Create Account</button>
+                    </form>
+
+                    <div style="text-align: center; margin-top: 30px;">
+                        <p class="text-muted">Already a member? <a href="#" onclick="showPage('signin-page')"
+                                style="font-weight: 600;">Sign In</a></p>
+                        <p class="mt-4"><a href="#" onclick="showPage('landing-page')" class="text-muted">← Back to
+                                Home</a></p>
+                    </div>
+                </div>
+            </div>
+            <!-- Right: Visual -->
+            <div class="auth-visual">
+                <div class="glass-panel" style="padding: 40px; max-width: 400px; text-align: center;">
+                    <div style="font-size: 80px; margin-bottom: 20px;">🌱</div>
+                    <h3>"Agromind helped me save 40% on fertilizer costs."</h3>
+                    <p class="text-muted mt-4">- Rajesh Kumar, Punjab</p>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Sign In Page -->
+    <!-- Sign In Page (Split Layout) -->
     <div id="signin-page" class="page">
-        <div class="auth-container">
-            <div class="auth-card">
-                <h2>Welcome Back</h2>
-                <form id="signin-form" onsubmit="handleSignin(event)">
-                    <input type="email" id="signin-email" placeholder="Email" required autocomplete="email">
-                    <input type="password" id="signin-password" placeholder="Password" required
-                        autocomplete="current-password">
-                    <button type="submit" class="btn-primary">Sign In</button>
-                </form>
-                <p>Don't have an account? <a href="#" onclick="showPage('signup-page')">Sign Up</a></p>
-                <p><a href="#" onclick="showPage('landing-page')">← Back</a></p>
+        <div class="auth-split-wrapper">
+            <!-- Left: Form -->
+            <div class="auth-form-side">
+                <div class="auth-glass-card">
+                    <div style="margin-bottom: 30px;">
+                        <h2 style="font-size: 2rem; margin-bottom: 10px;">Welcome Back</h2>
+                        <p class="text-muted">Access your dashboard and AI tools.</p>
+                    </div>
+
+                    <form id="signin-form" onsubmit="handleSignin(event)">
+                        <div class="mb-4">
+                            <label>Email</label>
+                            <input type="email" id="signin-email" placeholder="name@example.com" required
+                                autocomplete="email">
+                        </div>
+                        <div class="mb-4">
+                            <label>Password</label>
+                            <input type="password" id="signin-password" placeholder="Your password" required
+                                autocomplete="current-password">
+                        </div>
+                        <button type="submit" class="btn-primary w-100" style="padding: 16px;">Sign In</button>
+                    </form>
+
+                    <div style="text-align: center; margin-top: 30px;">
+                        <p class="text-muted">New here? <a href="#" onclick="showPage('signup-page')"
+                                style="font-weight: 600;">Create Account</a></p>
+                        <p class="mt-4"><a href="#" onclick="showPage('landing-page')" class="text-muted">← Back to
+                                Home</a></p>
+                    </div>
+                </div>
+            </div>
+            <!-- Right: Visual -->
+            <div class="auth-visual">
+                <div class="glass-panel" style="padding: 40px; max-width: 400px; text-align: center;">
+                    <div style="font-size: 80px; margin-bottom: 20px;">🛰️</div>
+                    <h3>AI-Driven Insights</h3>
+                    <p class="text-muted mt-4">Real-time analysis of your crop health using satellite and local data.
+                    </p>
+                </div>
             </div>
         </div>
     </div>
@@ -63,41 +214,43 @@
             <header>
                 <div class="logo">Agromind AI</div>
                 <div class="user-info">
-                    <span id="user-name">Guest</span>
-                    <button onclick="handleSignout()" class="btn-secondary">Sign Out</button>
+                    <span class="text-muted">Hello,</span>
+                    <span id="user-name" style="font-weight: 600; color: var(--text-primary);">Guest</span>
+                    <button onclick="handleSignout()" class="btn-secondary btn-sm" style="margin-left: 15px;">Sign
+                        Out</button>
                 </div>
             </header>
 
-            <main>
-                <h1>How can I help your farm today?</h1>
+            <main style="background: transparent; border: none; padding: 20px 0;">
+                <h1 style="font-size: 2.5rem; text-align: center; margin: 40px 0;">How can I help you today?</h1>
 
                 <div class="features">
                     <div class="feature-card" onclick="showFeature('voice')">
-                        <div class="feature-icon">🎤</div>
-                        <h3>Voice Assistant</h3>
-                        <p>Ask farming questions in your language</p>
+                        <div class="feature-icon">🎙️</div>
+                        <h3>AI Assistant</h3>
+                        <p>Voice-enabled farming advice</p>
                     </div>
 
                     <div class="feature-card" onclick="showFeature('pest')">
-                        <div class="feature-icon">🔍</div>
-                        <h3>Detect Disease & Pest</h3>
-                        <p>Identify pests & diseases from photos</p>
+                        <div class="feature-icon">🔎</div>
+                        <h3>Pest Doctor</h3>
+                        <p>Identify disease from photos</p>
                     </div>
 
                     <div class="feature-card" onclick="showFeature('crop')">
-                        <div class="feature-icon">🌾</div>
-                        <h3>Crop Advice</h3>
-                        <p>Get crop recommendations</p>
+                        <div class="feature-icon">🌱</div>
+                        <h3>Crop Advisor</h3>
+                        <p>Smart recommendations</p>
                     </div>
 
                     <div class="feature-card" onclick="showPage('community-page')">
-                        <div class="feature-icon">💬</div>
+                        <div class="feature-icon">👥</div>
                         <h3>Community</h3>
                         <p>Connect with farmers</p>
                     </div>
                 </div>
 
-                <div id="feature-content" class="feature-content"></div>
+                <div id="feature-content"></div>
             </main>
         </div>
     </div>
@@ -106,28 +259,31 @@
     <div id="community-page" class="page">
         <div class="app-container">
             <header>
-                <div class="logo"></div>Agromind AI Community
+                <div class="flex items-center gap-2">
+                    <div class="logo" style="font-size: 1.2rem;">Agromind Community</div>
+                </div>
+                <button onclick="showPage('app-page')" class="btn-secondary">← Dashboard</button>
+            </header>
+
+            <main style="background: transparent; border: none; padding: 20px 0;">
+                <div class="community-header">
+                    <h2>Latest Discussions</h2>
+                    <button onclick="showCreatePost()" class="btn-primary">+ New Post</button>
+                </div>
+
+                <div id="posts-container">
+                    <div class="glass-panel" style="padding: 2rem; text-align: center;">
+                        <p>Loading discussions...</p>
+                    </div>
+                </div>
+            </main>
         </div>
-        <button onclick="showPage('app-page')" class="btn-secondary">← Back</button>
-        </header>
-
-        <main>
-            <div class="community-header">
-                <h1>Community Forum</h1>
-                <button onclick="showCreatePost()" class="btn-primary">+ New Post</button>
-            </div>
-
-            <div id="posts-container" class="posts-container">
-                <p>Loading posts...</p>
-            </div>
-        </main>
-    </div>
     </div>
 
     <!-- Toast Notification -->
     <div id="toast" class="toast"></div>
 
-    <script src="/static/app.js?v=9"></script>
+    <script src="/static/app.js?v=11"></script>
 </body>
 
 </html>

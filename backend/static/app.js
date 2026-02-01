@@ -157,44 +157,47 @@ function showFeature(feature) {
     switch (feature) {
         case 'voice':
             content.innerHTML = `
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h2>🤖 AI Farming Assistant</h2>
-                    <div style="display: flex; gap: 10px; align-items: center;">
-                        <select id="chat-language" style="padding: 8px; border-radius: 8px; border: 2px solid #e5e7eb;">
-                            <option value="en">English</option>
-                            <option value="hi">हिंदी (Hindi)</option>
-                            <option value="ta">தமிழ் (Tamil)</option>
-                            <option value="te">తెలుగు (Telugu)</option>
-                            <option value="kn">ಕನ್ನಡ (Kannada)</option>
-                            <option value="ml">മലയാളം (Malayalam)</option>
-                        </select>
-                        <button id="voice-toggle" onclick="toggleVoiceOutput()" style="padding: 8px 12px; border-radius: 8px; border: none; background: #f3f4f6; cursor: pointer;" title="Toggle voice output">
-                            🔊
-                        </button>
+                <div class="glass-panel" style="padding: 24px;">
+                    <div class="flex calculate-header mb-4" style="justify-content: space-between; align-items: center;">
+                        <h2>🤖 AI Farming Assistant</h2>
+                        <div class="flex gap-2">
+                            <select id="chat-language">
+                                <option value="en">English</option>
+                                <option value="hi">हिंदी (Hindi)</option>
+                                <option value="ta">தமிழ் (Tamil)</option>
+                                <option value="te">తెలుగు (Telugu)</option>
+                                <option value="kn">ಕನ್ನಡ (Kannada)</option>
+                                <option value="ml">മലയാളം (Malayalam)</option>
+                            </select>
+                            <button id="voice-toggle" onclick="toggleVoiceOutput()" class="btn-secondary btn-icon" title="Toggle voice">
+                                🔊
+                            </button>
+                        </div>
                     </div>
-                </div>
-                
-                <div id="chat-messages" style="height: 400px; overflow-y: auto; border: 2px solid #e5e7eb; border-radius: 12px; padding: 20px; margin-bottom: 20px; background: #f9fafb;">
-                    <div class="bot-message" style="margin-bottom: 15px; text-align: left;">
-                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 16px; border-radius: 12px 12px 12px 0; display: inline-block; max-width: 80%;">
+                    
+                    <div id="chat-messages" class="chat-window mb-4">
+                        <div class="message bot">
                             <strong>🤖 Assistant:</strong> Hello! I'm your AI farming assistant. Ask me anything about crops, pests, soil, or farming techniques!
                         </div>
                     </div>
+                    
+                    <div class="chat-controls flex gap-2">
+                        <input type="text" id="chat-input" placeholder="Type your question..." onkeypress="if(event.key==='Enter') sendChatMessage()">
+                        
+                        <input type="file" id="document-upload" accept="image/*" style="display: none;" onchange="uploadDocument()">
+                        <button onclick="document.getElementById('document-upload').click()" class="btn-secondary btn-icon" title="Upload document">
+                            📄
+                        </button>
+                        
+                        <button onclick="startVoiceInput()" class="btn-danger btn-icon" title="Voice input">
+                            🎤
+                        </button>
+                        
+                        <button onclick="sendChatMessage()" class="btn-primary">Send</button>
+                    </div>
+                    
+                    <div id="voice-status" class="text-center mt-4 text-muted" style="font-size: 0.9rem;"></div>
                 </div>
-                
-                <div style="display: flex; gap: 10px;">
-                    <input type="text" id="chat-input" placeholder="Type your question..." style="flex: 1; padding: 12px; border-radius: 8px; border: 2px solid #e5e7eb;" onkeypress="if(event.key==='Enter') sendChatMessage()">
-                    <input type="file" id="document-upload" accept="image/*" style="display: none;" onchange="uploadDocument()">
-                    <button onclick="document.getElementById('document-upload').click()" style="padding: 12px 20px; border-radius: 8px; border: none; background: #10b981; color: white; cursor: pointer; font-size: 18px;" title="Upload document">
-                        📄
-                    </button>
-                    <button onclick="startVoiceInput()" style="padding: 12px 20px; border-radius: 8px; border: none; background: #ef4444; color: white; cursor: pointer; font-size: 18px;" title="Voice input">
-                        🎤
-                    </button>
-                    <button onclick="sendChatMessage()" class="btn-primary" style="padding: 12px 24px;">Send</button>
-                </div>
-                
-                <div id="voice-status" style="margin-top: 10px; text-align: center; color: #666; font-size: 14px;"></div>
             `;
 
             // Initialize voice features
@@ -204,51 +207,71 @@ function showFeature(feature) {
             break;
         case 'pest':
             content.innerHTML = `
-            <div class="feature-box">
-                <h2>🔍 Detect Disease & Pest</h2>
-                <div class="upload-section">
-                    <p>Upload a clear photo of the affected plant leaf, stem, or fruit.</p>
-                    <input type="file" id="pest-upload" accept="image/*" onchange="previewPestImage(event)">
-                    <div id="pest-preview"></div>
-                    <button onclick="analyzePest()" class="btn-primary" style="margin-top: 15px;">Analyze Health</button>
-                    <div id="pest-result" class="result-box" style="display: none;"></div>
+                <div class="glass-panel" style="padding: 2rem; max-width: 600px; margin: 0 auto; text-align: center;">
+                    <h2>🔍 Detect Disease & Pest</h2>
+                    <div class="upload-section mt-4">
+                        <p class="text-muted mb-4">Upload a clear photo of the affected plant leaf, stem, or fruit.</p>
+                        
+                        <div style="border: 2px dashed var(--glass-border); border-radius: 12px; padding: 40px; margin-bottom: 20px; cursor: pointer;" onclick="document.getElementById('pest-upload').click()">
+                            <div style="font-size: 40px; margin-bottom: 10px;">📸</div>
+                            <p>Click to upload photo</p>
+                        </div>
+                        <input type="file" id="pest-upload" accept="image/*" onchange="previewPestImage(event)" style="display: none;">
+                        
+                        <div id="pest-preview" class="mb-4"></div>
+                        <button onclick="analyzePestImage()" class="btn-primary w-100">Analyze Health</button>
+                        <div id="pest-result" class="result-box" style="display: none;"></div>
+                    </div>
                 </div>
-            </div>
-        `;
+            `;
             break;
         case 'crop':
             content.innerHTML = `
-                <h2>🌾 Crop Recommendations</h2>
-                <p>Get personalized crop recommendations based on your farm conditions</p>
-                <div style="margin: 20px 0;">
-                    <label style="display: block; margin-bottom: 5px; font-weight: bold;">Soil Type:</label>
-                    <select id="soil-type" style="width: 100%; padding: 10px; margin: 10px 0; border-radius: 8px; border: 2px solid #e5e7eb;">
-                        <option value="clay">Clay Soil</option>
-                        <option value="sandy">Sandy Soil</option>
-                        <option value="loamy" selected>Loamy Soil</option>
-                        <option value="black">Black Soil</option>
-                    </select>
+                <div class="glass-panel" style="padding: 2.5rem; max-width: 800px; margin: 0 auto;">
+                    <div class="text-center mb-4">
+                        <h2>🌾 Crop Recommendations</h2>
+                        <p class="text-muted">Get AI-powered recommendations for your specific conditions</p>
+                    </div>
                     
-                    <label style="display: block; margin-bottom: 5px; font-weight: bold;">Season:</label>
-                    <select id="season" style="width: 100%; padding: 10px; margin: 10px 0; border-radius: 8px; border: 2px solid #e5e7eb;">
-                        <option value="kharif">Kharif (Monsoon - June to October)</option>
-                        <option value="rabi">Rabi (Winter - October to March)</option>
-                        <option value="zaid">Zaid (Summer - March to June)</option>
-                    </select>
+                    <div class="grid-2">
+                        <div>
+                            <label>Soil Type</label>
+                            <select id="soil-type">
+                                <option value="clay">Clay Soil</option>
+                                <option value="sandy">Sandy Soil</option>
+                                <option value="loamy" selected>Loamy Soil</option>
+                                <option value="black">Black Soil</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label>Season</label>
+                            <select id="season">
+                                <option value="kharif">Kharif (Monsoon)</option>
+                                <option value="rabi">Rabi (Winter)</option>
+                                <option value="zaid">Zaid (Summer)</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label>Region/State</label>
+                            <input type="text" id="region" placeholder="e.g., Tamil Nadu">
+                        </div>
+                        
+                        <div>
+                            <label>Avg Temperature (°C)</label>
+                            <input type="number" id="temperature" placeholder="e.g., 28" min="10" max="45">
+                        </div>
+                    </div>
                     
-                    <label style="display: block; margin-bottom: 5px; font-weight: bold;">Region/State:</label>
-                    <input type="text" id="region" placeholder="e.g., Tamil Nadu, Maharashtra" style="width: 100%; padding: 10px; margin: 10px 0; border-radius: 8px; border: 2px solid #e5e7eb;">
+                    <div class="mt-4">
+                        <label>Soil pH (Optional)</label>
+                        <input type="number" id="soil-ph" placeholder="Default: 6.5" min="4" max="9" step="0.1">
+                    </div>
                     
-                    <label style="display: block; margin-bottom: 5px; font-weight: bold;">Average Temperature (°C):</label>
-                    <input type="number" id="temperature" placeholder="e.g., 28" min="10" max="45" style="width: 100%; padding: 10px; margin: 10px 0; border-radius: 8px; border: 2px solid #e5e7eb;">
-                    <small style="color: #666;">Optional - Leave blank to use season defaults</small>
-                    
-                    <label style="display: block; margin-bottom: 5px; margin-top: 15px; font-weight: bold;">Soil pH (if known):</label>
-                    <input type="number" id="soil-ph" placeholder="e.g., 6.5" min="4" max="9" step="0.1" style="width: 100%; padding: 10px; margin: 10px 0; border-radius: 8px; border: 2px solid #e5e7eb;">
-                    <small style="color: #666;">Optional - Default is 6.5</small>
+                    <button onclick="getCropRecommendations()" class="btn-primary w-100 mt-4">Get Recommendation</button>
+                    <div id="crop-result" class="mt-4"></div>
                 </div>
-                <button onclick="getCropRecommendations()" class="btn-primary">Get AI Recommendations</button>
-                <div id="crop-result" style="margin-top: 20px;"></div>
             `;
             break;
     }
@@ -264,7 +287,7 @@ function sendChatMessage() {
 
     // Add user message
     messages.innerHTML += `
-        <div style="background: #e0f2fe; padding: 10px; border-radius: 8px; margin-bottom: 10px; text-align: right;">
+        <div class="message user">
             <strong>You:</strong> ${question}
         </div>
     `;
@@ -290,8 +313,8 @@ function sendChatMessage() {
         }
 
         messages.innerHTML += `
-            <div style="background: white; padding: 10px; border-radius: 8px; margin-bottom: 10px;">
-                <strong>Bot:</strong> ${response}
+            <div class="message bot">
+                <strong>🤖 Bot:</strong> ${response}
             </div>
         `;
         messages.scrollTop = messages.scrollHeight;
@@ -312,7 +335,7 @@ function previewImage(input, previewId) {
 
 // Pest image analysis - REAL ML MODEL
 async function analyzePestImage() {
-    const fileInput = document.getElementById('pest-image');
+    const fileInput = document.getElementById('pest-upload');
     const resultDiv = document.getElementById('pest-result');
 
     if (!fileInput.files || !fileInput.files[0]) {
@@ -320,6 +343,7 @@ async function analyzePestImage() {
         return;
     }
 
+    resultDiv.style.display = 'block';
     resultDiv.innerHTML = '<p>🔍 Analyzing image...</p>';
 
     try {
@@ -340,21 +364,65 @@ async function analyzePestImage() {
 
         const result = await response.json();
 
+        // Helper to format text (remove ** and make lists)
+        const formatText = (text) => {
+            if (!text) return 'No information available';
+
+            // Remove redundant styling chars
+            let cleanText = text.replace(/\*\*/g, '');
+
+            // Split numbered lists if present (assumes "1. ", "2. ")
+            if (cleanText.includes('1.') || cleanText.includes('1 ')) {
+                // Try to split by numbers followed by dot or space
+                const parts = cleanText.split(/\d+[\.\)]\s+/);
+                if (parts.length > 1) {
+                    return '<ul style="text-align: left; padding-left: 20px; color: var(--text-secondary);">' +
+                        parts.filter(t => t.trim().length > 0)
+                            .map(item => `<li style="margin-bottom: 8px;">${item.trim()}</li>`).join('') +
+                        '</ul>';
+                }
+            }
+            return `<p style="color: var(--text-secondary); text-align: left;">${cleanText}</p>`;
+        };
+
+        // Clean up redundant "Detected: " prefix
+        const cleanPestName = result.pest.replace(/^Detected:\s*/i, '').replace(/detected:\s*/i, '').replace(/⚠️/g, '').trim();
+
         resultDiv.innerHTML = `
-            <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; border-left: 4px solid #22c55e;">
-                <h3>🎯 Detection Result</h3>
-                <p><strong>Detected:</strong> ${result.pest}</p>
-                <p><strong>Confidence:</strong> ${result.confidence.toFixed(1)}%</p>
-                <p style="margin-top: 15px;"><strong>💊 Treatment:</strong> ${result.treatment}</p>
-                <p style="margin-top: 10px;"><strong>🛡️ Prevention:</strong> ${result.prevention}</p>
+            <div class="result-card success" style="background: var(--gradient-primary); padding: 30px; margin-top: 20px; box-shadow: var(--shadow-glow);">
+                <div class="flex" style="justify-content: space-between; align-items: center;">
+                    <div style="text-align: left;">
+                        <h3 style="margin: 0; opacity: 0.9; font-size: 1.2rem;">Detection Result</h3>
+                        <h2 style="font-size: 2.5rem; margin: 10px 0; font-weight: 800;">${cleanPestName.toUpperCase()}</h2>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.2); display: inline-block; padding: 10px 20px; border-radius: 12px; backdrop-filter: blur(4px);">
+                        <strong style="font-size: 1.2rem;">${result.confidence.toFixed(1)}% Match</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-panel" style="padding: 24px; margin-top: 24px;">
+                <h4 style="color: var(--primary); display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+                    <span style="font-size: 1.5rem;">💊</span> Treatment Plan
+                </h4>
+                <div style="background: rgba(30, 41, 59, 0.4); padding: 20px; border-radius: 12px; margin-bottom: 24px;">
+                    ${formatText(result.treatment)}
+                </div>
+
+                <h4 style="color: var(--secondary); display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+                    <span style="font-size: 1.5rem;">🛡️</span> Prevention Guide
+                </h4>
+                <div style="background: rgba(30, 41, 59, 0.4); padding: 20px; border-radius: 12px;">
+                    ${formatText(result.prevention)}
+                </div>
             </div>
         `;
         showToast('✅ Analysis complete!', 'success');
     } catch (error) {
         resultDiv.innerHTML = `
-            <div style="background: #fee2e2; padding: 20px; border-radius: 8px; border-left: 4px solid #ef4444;">
-                <h4 style="color: #dc2626; margin-top: 0;">❌ ${error.message}</h4>
-                <p style="color: #991b1b;">Please ensure you have uploaded a valid image of the affected crop or pest.</p>
+            <div class="result-card error">
+                <h4>❌ ${error.message}</h4>
+                <p>Please ensure you have uploaded a valid image of the affected crop or pest.</p>
             </div>
         `;
         showToast('Analysis failed', 'error');
@@ -419,44 +487,58 @@ async function getCropRecommendations() {
         const cropInfo = getCropInfo(result.crop);
 
         resultDiv.innerHTML = `
-            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 25px; border-radius: 12px; color: white; margin-bottom: 20px;">
-                <h2 style="margin: 0 0 10px 0; font-size: 24px;">🎯 Recommended Crop</h2>
-                <h3 style="margin: 0; font-size: 32px; font-weight: bold;">${result.crop.toUpperCase()}</h3>
-                <div style="background: rgba(255,255,255,0.2); padding: 10px; border-radius: 8px; margin-top: 15px;">
-                    <p style="margin: 0; font-size: 18px;">Confidence: <strong>${result.confidence.toFixed(1)}%</strong></p>
+            <div class="result-card success" style="background: var(--gradient-primary); text-align: left; padding: 30px; box-shadow: var(--shadow-glow);">
+                <div class="flex" style="justify-content: space-between; align-items: center;">
+                    <div>
+                        <h2 style="margin: 0; font-size: 1.5rem; opacity: 0.9;">Recommended Crop</h2>
+                        <h3 style="margin: 5px 0 0 0; font-size: 3rem; font-weight: 800;">${result.crop.toUpperCase()}</h3>
+                    </div>
+                    <div style="text-align: right; background: rgba(255,255,255,0.2); padding: 10px 20px; border-radius: 12px; backdrop-filter: blur(4px);">
+                        <span style="font-size: 0.9rem; display: block;">Confidence</span>
+                        <strong style="font-size: 1.5rem;">${result.confidence.toFixed(1)}%</strong>
+                    </div>
                 </div>
             </div>
-            
-            <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                <h4 style="color: #667eea; margin-top: 0;">📊 Analysis Details</h4>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
-                    <div style="background: #f0f9ff; padding: 15px; border-radius: 8px;">
-                        <p style="margin: 0; color: #000000; font-size: 12px;">Soil Type</p>
-                        <p style="margin: 5px 0 0 0; font-weight: bold; color: #000000;">${soilType.charAt(0).toUpperCase() + soilType.slice(1)}</p>
+
+            <div class="glass-panel" style="padding: 24px; margin-top: 24px;">
+                <h4 style="color: var(--primary); margin-bottom: 20px;">📊 Analysis Details</h4>
+                <div class="grid-2">
+                    <div class="p-3" style="background: rgba(30, 41, 59, 0.4); border-radius: 12px;">
+                        <p class="text-muted text-sm">Soil Type</p>
+                        <p class="font-bold">${soilType.charAt(0).toUpperCase() + soilType.slice(1)}</p>
                     </div>
-                    <div style="background: #f0fdf4; padding: 15px; border-radius: 8px;">
-                        <p style="margin: 0; color: #000000; font-size: 12px;">Season</p>
-                        <p style="margin: 5px 0 0 0; font-weight: bold; color: #000000;">${season.charAt(0).toUpperCase() + season.slice(1)}</p>
+                    <div class="p-3" style="background: rgba(30, 41, 59, 0.4); border-radius: 12px;">
+                        <p class="text-muted text-sm">Season</p>
+                        <p class="font-bold">${season.charAt(0).toUpperCase() + season.slice(1)}</p>
                     </div>
-                    <div style="background: #fef3c7; padding: 15px; border-radius: 8px;">
-                        <p style="margin: 0; color: #000000; font-size: 12px;">Region</p>
-                        <p style="margin: 5px 0 0 0; font-weight: bold; color: #000000;">${region || 'General'}</p>
+                    <div class="p-3" style="background: rgba(30, 41, 59, 0.4); border-radius: 12px;">
+                        <p class="text-muted text-sm">Region</p>
+                        <p class="font-bold">${region || 'General'}</p>
                     </div>
-                    <div style="background: #fce7f3; padding: 15px; border-radius: 8px;">
-                        <p style="margin: 0; color: #000000; font-size: 12px;">Climate</p>
-                        <p style="margin: 5px 0 0 0; font-weight: bold; color: #000000;">${temperature}°C, ${climate.rainfall}mm</p>
+                    <div class="p-3" style="background: rgba(30, 41, 59, 0.4); border-radius: 12px;">
+                        <p class="text-muted text-sm">Climate</p>
+                        <p class="font-bold">${temperature}°C, ${climate.rainfall}mm</p>
                     </div>
                 </div>
-                
-                <h4 style="color: #667eea; margin-top: 20px;">🌱 Crop Information</h4>
-                <div style="background: #f9fafb; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
-                    <p style="margin: 0 0 10px 0; color: #000000;"><strong>Expected Yield:</strong> ${cropInfo.yield}</p>
-                    <p style="margin: 0 0 10px 0; color: #000000;"><strong>Growing Period:</strong> ${cropInfo.duration}</p>
-                    <p style="margin: 0; color: #000000;"><strong>Water Requirement:</strong> ${cropInfo.water}</p>
+
+                <h4 style="color: var(--primary); margin: 30px 0 20px 0;">🌱 Crop Information</h4>
+                <div style="background: rgba(16, 185, 129, 0.05); padding: 20px; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.2);">
+                    <div class="flex" style="justify-content: space-between; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 10px;">
+                        <strong>Expected Yield:</strong> 
+                        <span>${cropInfo.yield}</span>
+                    </div>
+                    <div class="flex" style="justify-content: space-between; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 10px;">
+                        <strong>Growing Period:</strong>
+                        <span>${cropInfo.duration}</span>
+                    </div>
+                    <div class="flex" style="justify-content: space-between;">
+                        <strong>Water Requirement:</strong>
+                        <span>${cropInfo.water}</span>
+                    </div>
                 </div>
-                
-                <h4 style="color: #667eea; margin-top: 20px;">💡 Recommendations</h4>
-                <ul style="margin: 10px 0; padding-left: 20px; color: #000000;">
+
+                <h4 style="color: var(--primary); margin: 30px 0 20px 0;">💡 Recommendations</h4>
+                <ul style="padding-left: 20px; color: var(--text-secondary); line-height: 1.8;">
                     <li>Soil nutrients (N:${npk.N}, P:${npk.P}, K:${npk.K}) are well-suited for ${result.crop}</li>
                     <li>Climate conditions (${climate.temperature}°C, ${climate.humidity}% humidity) are optimal</li>
                     <li>Consider soil testing for precise nutrient management</li>
@@ -467,9 +549,9 @@ async function getCropRecommendations() {
         showToast('✅ Recommendation ready!', 'success');
     } catch (error) {
         resultDiv.innerHTML = `
-            <div style="background: #fee2e2; padding: 20px; border-radius: 8px; border-left: 4px solid #ef4444;">
-                <h4 style="color: #dc2626; margin-top: 0;">❌ Error</h4>
-                <p style="color: #991b1b;">${error.message}</p>
+            <div class="glass-panel" style="padding: 20px; border-left: 4px solid var(--danger); background: rgba(239, 68, 68, 0.1);">
+                <h4 style="color: var(--danger); margin-top: 0;">❌ Error</h4>
+                <p>${error.message}</p>
             </div>
         `;
         showToast('Failed to get recommendations', 'error');
@@ -499,40 +581,72 @@ function getCropInfo(cropName) {
 // Load posts
 async function loadPosts() {
     const container = document.getElementById('posts-container');
-    container.innerHTML = '<p>Loading posts...</p>';
+    container.innerHTML = `
+        <div class="empty-state">
+            <div class="empty-icon">⏳</div>
+            <h3>Loading discussions...</h3>
+        </div>
+    `;
 
     try {
         const response = await fetch(`${API_URL}/community/posts`);
         const data = await response.json();
 
         if (data.posts.length === 0) {
-            container.innerHTML = '<p>No posts yet. Be the first to post!</p>';
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">🌱</div>
+                    <h3>No discussions yet</h3>
+                    <p class="text-muted">Be the first to ask a question or share your farming journey!</p>
+                </div>
+            `;
             return;
         }
 
         container.innerHTML = data.posts.map(post => {
             const isOwnPost = currentUser && post.user_id == currentUser.id;
-            const deleteBtn = isOwnPost ? `<button onclick="deletePost(${post.id})" style="background: #ef4444; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; float: right;">Delete</button>` : '';
+            const deleteBtn = isOwnPost ? `<button onclick="deletePost(${post.id})" class="btn-danger btn-sm" style="padding: 4px 10px; font-size: 0.8rem;">Delete</button>` : '';
+            const initial = (post.username || 'U')[0].toUpperCase();
 
             return `
-                <div class="post-card" id="post-${post.id}">
-                    ${deleteBtn}
-                    <h3>${post.title}</h3>
-                    <p>${post.content}</p>
-                    <div class="post-meta">
-                        ${post.category ? `<span>📁 ${post.category}</span> • ` : ''}
-                        <span>👤 ${post.username || 'User'}</span> • 
-                        <span>${new Date(post.created_at).toLocaleDateString()}</span>
+                <div class="post-card" id="post-${post.id}" onclick="viewPostDetails(${post.id})" style="cursor: pointer;">
+                    <div class="post-header">
+                        <div class="post-author-info">
+                            <div class="user-avatar">${initial}</div>
+                            <div class="post-meta">
+                                <span class="post-username">${post.username || 'User'}</span>
+                                <span class="post-date">${new Date(post.created_at).toLocaleDateString()}</span>
+                            </div>
+                        </div>
+                        <div class="flex gap-2 items-center">
+                            ${post.category ? `<span class="post-tag">#${post.category}</span>` : ''}
+                            ${deleteBtn}
+                        </div>
                     </div>
-                    ${post.image_url ? `<img src="${post.image_url}" style="width: auto; max-width: 100%; height: auto; max-height: 300px; display: block; margin: 10px 0; border-radius: 8px;">` : ''}
-                    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e5e7eb;">
-                        <button onclick="viewPostDetails(${post.id})" class="btn-secondary" style="padding: 8px 15px;">View Answers (${post.answers_count || 0})</button>
+                    
+                    <div class="post-content">
+                        <h3>${post.title}</h3>
+                        <p class="post-snippet">${post.content.substring(0, 150)}${post.content.length > 150 ? '...' : ''}</p>
+                        ${post.image_url ? `<img src="${post.image_url}" class="post-image" style="height: 200px; object-fit: cover;">` : ''}
+                    </div>
+
+                    <div class="post-footer">
+                        <button class="btn-secondary btn-sm" style="border: none; background: transparent; padding-left: 0;">
+                            💬 ${post.answer_count || 0} Comments
+                        </button>
+                        <span class="text-primary" style="font-size: 0.9rem; font-weight: 500;">Read Discussion →</span>
                     </div>
                 </div>
             `;
         }).join('');
     } catch (error) {
-        container.innerHTML = '<p>Failed to load posts</p>';
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-icon">⚠️</div>
+                <h3>Failed to load posts</h3>
+                <p class="text-muted">Please check your connection and try again.</p>
+            </div>
+        `;
         showToast('Failed to load posts', 'error');
     }
 }
@@ -540,107 +654,106 @@ async function loadPosts() {
 // View post details with answers
 async function viewPostDetails(postId) {
     const container = document.getElementById('posts-container');
-    container.innerHTML = '<p>Loading post...</p>';
+    container.innerHTML = `
+         <div class="empty-state">
+            <div class="empty-icon">⏳</div>
+            <h3>Loading discussion...</h3>
+        </div>
+    `;
 
     try {
         const response = await fetch(`${API_URL}/community/posts/${postId}`);
         const post = await response.json();
 
         const isOwnPost = currentUser && post.user_id == currentUser.id;
-        const deleteBtn = isOwnPost ? `<button onclick="deletePost(${post.id})" style="background: #ef4444; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer;">Delete Post</button>` : '';
+        const deleteBtn = isOwnPost ? `<button onclick="deletePost(${post.id})" class="btn-danger">Delete Discussion</button>` : '';
+        const initial = (post.username || 'U')[0].toUpperCase();
 
         const answersHtml = post.answers && post.answers.length > 0
             ? post.answers.map(answer => {
                 const isOwnAnswer = currentUser && answer.user_id == currentUser.id;
-                const deleteAnswerBtn = isOwnAnswer ? `<button onclick="deleteAnswer(${answer.id})" style="background: #ef4444; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; float: right; font-size: 12px;">Delete</button>` : '';
+                const deleteAnswerBtn = isOwnAnswer ? `<button onclick="deleteAnswer(${answer.id})" class="btn-danger btn-sm">Delete</button>` : '';
+                const answerInitial = (answer.username || 'U')[0].toUpperCase();
 
                 return `
-                    <div style="background: #f9fafb; padding: 15px; border-radius: 8px; margin: 10px 0; border-left: 3px solid #22c55e;">
-                        ${deleteAnswerBtn}
-                        <p style="color: #000000; font-weight: 500;">${answer.content}</p>
-                        <div style="font-size: 12px; color: #666; margin-top: 10px;">
-                            👤 ${answer.username || 'User'} • ${new Date(answer.created_at).toLocaleDateString()}
+                    <div class="answer-card">
+                        <div class="answer-header">
+                            <div class="user-avatar" style="width: 32px; height: 32px; font-size: 0.9rem;">${answerInitial}</div>
+                            <div class="post-meta">
+                                <span class="post-username">${answer.username || 'User'}</span>
+                                <span class="post-date">${new Date(answer.created_at).toLocaleDateString()}</span>
+                            </div>
+                            <div style="margin-left: auto;">
+                                ${deleteAnswerBtn}
+                            </div>
                         </div>
+                        <p style="color: var(--text-primary); line-height: 1.6;">${answer.content}</p>
                     </div>
                 `;
             }).join('')
-            : '<p style="color: #666;">No answers yet. Be the first to answer!</p>';
+            : `
+                <div class="empty-state" style="padding: 30px; border-style: dashed;">
+                    <p class="text-muted">No answers yet. Be the first to start the conversation!</p>
+                </div>
+            `;
 
         container.innerHTML = `
-            <div style="background: white; padding: 30px; border-radius: 12px; margin-bottom: 20px;">
-                <button onclick="loadPosts()" class="btn-secondary" style="margin-bottom: 20px;">← Back to Posts</button>
-                ${deleteBtn}
-                <h2>${post.title}</h2>
-                <div class="post-meta" style="margin-bottom: 15px;">
-                    ${post.category ? `<span>📁 ${post.category}</span> • ` : ''}
-                    <span>👤 ${post.username || 'User'}</span> • 
-                    <span>${new Date(post.created_at).toLocaleDateString()}</span>
+            <div style="animation: fadeInUp 0.5s ease;">
+                <div class="flex justify-between items-center mb-4">
+                    <button onclick="loadPosts()" class="btn-secondary">← Back to Feed</button>
+                    ${deleteBtn}
                 </div>
-                ${post.image_url ? `<img src="${post.image_url}" style="width: auto; max-width: 100%; height: auto; max-height: 500px; display: block; margin: 20px auto; border-radius: 12px;">` : ''}
-                <p style="margin: 20px 0; font-size: 1.1em; line-height: 1.6;">${post.content}</p>
                 
-                <hr style="margin: 30px 0; border: none; border-top: 1px solid #e5e7eb;">
-                
-                <h3>Answers (${post.answers ? post.answers.length : 0})</h3>
-                ${answersHtml}
+                <div class="glass-panel" style="padding: 40px; margin-bottom: 2rem;">
+                    <div class="post-header">
+                        <div class="post-author-info">
+                            <div class="user-avatar" style="width: 50px; height: 50px; font-size: 1.3rem;">${initial}</div>
+                            <div>
+                                <h2 style="margin: 0; font-size: 2rem; line-height: 1.2;">${post.title}</h2>
+                                <div class="post-meta mt-4" style="flex-direction: row; gap: 15px;">
+                                    <span class="post-username">${post.username || 'User'}</span>
+                                    <span>•</span>
+                                    <span class="post-date">${new Date(post.created_at).toLocaleDateString()}</span>
+                                    ${post.category ? `<span>•</span> <span class="post-tag">#${post.category}</span>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    ${post.image_url ? `<img src="${post.image_url}" class="post-image" style="width: 100%; max-height: 500px; object-fit: contain; background: rgba(0,0,0,0.2); border-radius: 12px; margin: 20px 0;">` : ''}
+                    
+                    <div class="post-content" style="font-size: 1.1rem; line-height: 1.8; color: var(--text-primary);">
+                        ${post.content}
+                    </div>
+                </div>
+
+                <div class="answer-feed">
+                    <h3 style="margin-bottom: 20px;">Discussion (${post.answers ? post.answers.length : 0})</h3>
+                    ${answersHtml}
+                </div>
                 
                 ${token ? `
-                    <div style="margin-top: 30px;">
-                        <h4>Add Your Answer</h4>
-                        <textarea id="answer-content" placeholder="Share your knowledge..." style="width: 100%; height: 100px; padding: 10px; border-radius: 8px; border: 2px solid #e5e7eb; margin: 10px 0;"></textarea>
-                        <button onclick="submitAnswer(${post.id})" class="btn-primary">Submit Answer</button>
+                    <div class="glass-panel" style="padding: 24px; margin-top: 24px; position: sticky; bottom: 20px;">
+                        <h4 class="mb-2">Join the conversation</h4>
+                        <div class="flex gap-2">
+                             <textarea id="answer-content" placeholder="Write a helpful answer..." rows="1" style="resize: none; border-radius: 24px; padding-left: 20px;" onfocus="this.rows=4"></textarea>
+                             <button onclick="submitAnswer(${post.id})" class="btn-primary btn-icon" style="width: 50px; height: 50px; border-radius: 50%;">➤</button>
+                        </div>
                     </div>
-                ` : '<p style="color: #666; margin-top: 20px;">Sign in to add an answer</p>'}
+                ` : '<div class="glass-panel p-4 text-center mt-4">Sign in to answer</div>'}
             </div>
         `;
     } catch (error) {
-        container.innerHTML = '<p>Failed to load post</p>';
+        container.innerHTML = '<div class="empty-state"><h3>Failed to load post</h3></div>';
         showToast('Failed to load post', 'error');
     }
 }
 
 // Delete answer
-async function deleteAnswer(answerId) {
-    if (!confirm('Are you sure you want to delete this answer?')) {
-        return;
-    }
+// Redundant deleteAnswer removed
 
-    try {
-        const response = await fetch(`${API_URL}/community/answers/${answerId}`, {
-            method: 'DELETE',
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        });
 
-        if (!response.ok) {
-            throw new Error('Failed to delete answer');
-        }
-
-        showToast('Answer deleted successfully', 'success');
-        // Refresh the post details to remove the deleted answer
-        // We need the post ID, but currently we are inside the answer context.
-        // A simple trick is to reload the current viewPostDetails by finding the active post in DB or DOM,
-        // but since viewPostDetails takes an ID, and we don't have it easily here without passing it,
-        // we can just re-fetch the current post if we store the ID or just reload.
-        // Better: passing postId to deleteAnswer would be ideal, but for now let's just use the global currentPostId if we track it,
-        // OR simpler: just assume the user is looking at the post.
-        // Getting post id from the answer element is hard without changing HTML structure.
-        // Let's modify the HTML generation to pass postID too.
-
-        // Actually, let's just reload the page or re-call viewPostDetails if we can find the id.
-        // For simplicity in this quick fix, let's look for the 'Submit Answer' button onclick attribute which has the ID.
-        const submitBtn = document.querySelector('button[onclick^="submitAnswer"]');
-        if (submitBtn) {
-            const onClickText = submitBtn.getAttribute('onclick'); // submitAnswer(123)
-            const postId = onClickText.match(/\d+/)[0];
-            viewPostDetails(postId);
-        }
-    } catch (error) {
-        showToast(error.message, 'error');
-    }
-}
-
+// Submit answer
 // Submit answer
 async function submitAnswer(postId) {
     const content = document.getElementById('answer-content').value.trim();
