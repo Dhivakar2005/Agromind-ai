@@ -3,13 +3,19 @@ Unified Farmi Backend - Single service for Auth + Community + ML + Chatbot
 Runs on port 8000 with SQLite
 """
 
+import os
+# Force pure-python protobuf to avoid 'MessageFactory' GetPrototype AttributeError
+# THIS MUST BE AT THE VERY TOP BEFORE ANY OTHER IMPORTS
+os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
+# os.environ["KERAS_BACKEND"] = "tensorflow"
+# os.environ["TF_USE_LEGACY_KERAS"] = "1"
+
 from fastapi import FastAPI, Depends, HTTPException, status, UploadFile, File, Form, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, EmailStr, validator
-from typing import Optional, List
-import os
+from typing import Optional, List, Dict
 import uuid
 import re
 import sqlite3
@@ -20,39 +26,71 @@ import shutil
 import time
 
 # ML Integration
-try:
-    import ml_integration
-    ML_ENABLED = True
-    print("✅ ML module imported successfully")
-except Exception as e:
-    print(f"⚠️  ML module import failed: {e}")
-    import traceback
-    traceback.print_exc()
-    ML_ENABLED = False
+from services import ml_integration
+ML_ENABLED = True
 
 # Translation Service
 try:
-    from translation_service import translate_text, detect_language, get_supported_languages
+    from services.translation_service import translate_text, detect_language, get_supported_languages
     TRANSLATION_ENABLED = True
-    print("✅ Translation service loaded")
 except Exception as e:
-    print(f"⚠️  Translation service not available: {e}")
     TRANSLATION_ENABLED = False
 
-# OCR Service (Hugging Face)
+
+# Agri-Chat Service
 try:
-    from huggingface_ocr import huggingface_ocr
-    OCR_ENABLED = huggingface_ocr.enabled
-    if OCR_ENABLED:
-        print("✅ Hugging Face OCR loaded (EasyOCR)")
-    else:
-        print("⚠️  OCR not available - install: pip install easyocr")
+    from services import agri_chat_service
+    AGRI_CHAT_ENABLED = True
 except Exception as e:
-    print(f"⚠️  OCR service not available: {e}")
-    OCR_ENABLED = False
+    AGRI_CHAT_ENABLED = False
+
+# YOLO Service (Removed as per user request)
+YOLO_ENABLED = False
+
+# Keras Plant Disease Service (EfficientNetB4)
+try:
+    from services import keras_disease_service
+    KERAS_ENABLED = True
+except Exception as e:
+    print(f"[WARN] Failed to import keras_disease_service: {e}")
+    KERAS_ENABLED = False
+
+
+# Semantic Cache for AI Responses
+# Format: {hash(query+lang+image?): {"response": text, "expiry": timestamp}}
+AI_RESPONSE_CACHE = {}
+CACHE_EXPIRY_SECONDS = 3600 # 1 hour
+
+def get_cached_response(key_parts: list) -> Optional[str]:
+    import hashlib
+    import time
+    key = hashlib.md5("".join([str(p) for p in key_parts]).encode()).hexdigest()
+    entry = AI_RESPONSE_CACHE.get(key)
+    if entry and time.time() < entry['expiry']:
+        print(f"[CACHE] Hit for key: {key[:8]}...")
+        return entry['response']
+    return None
+
+def set_cached_response(key_parts: list, response: str):
+    import hashlib
+    import time
+    key = hashlib.md5("".join([str(p) for p in key_parts]).encode()).hexdigest()
+    AI_RESPONSE_CACHE[key] = {
+        "response": response,
+        "expiry": time.time() + CACHE_EXPIRY_SECONDS
+    }
+    print(f"[CACHE] Saved entry for key: {key[:8]}...")
+
+# AI Recommendation Service (qwen2.5:3b via Ollama)
+try:
+    from services import recommendation_service
+    RECO_ENABLED = True
+except Exception as e:
+    RECO_ENABLED = False
 
 # ============ DATABASE ============
-DB_PATH = "farmi.db"
+# Use absolute path relative to this file to prevent multiple DB files
+DB_PATH = os.path.join(os.path.dirname(__file__), "farmi.db")
 
 @contextmanager
 def get_db():
@@ -95,40 +133,80 @@ def init_database():
                 post_id INTEGER NOT NULL,
                 user_id TEXT NOT NULL,
                 content TEXT NOT NULL,
+                likes INTEGER DEFAULT 0,
+                dislikes INTEGER DEFAULT 0,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
             )
         """)
         
-        # NO DEFAULT USER - Users must signup!
-        print("✅ Database initialized (no default users)")
+        # Migration: Add likes/dislikes if they don't exist
+        try:
+            conn.execute("ALTER TABLE answers ADD COLUMN likes INTEGER DEFAULT 0")
+        except: pass
+        try:
+            conn.execute("ALTER TABLE answers ADD COLUMN dislikes INTEGER DEFAULT 0")
+        except: pass
+        
+        # Database initialized silently
 
-# Initialize database on startup
-init_database()
+# init_database() removed from here, moving to lifespan for status check
 
 # ============ FASTAPI APP ============
 from contextlib import asynccontextmanager
 
-# ============ FASTAPI APP ============
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup logic
-    print("\n" + "="*50)
-    print("🚀 Starting Farmi Backend...")
-    print("="*50)
-    
-    if ML_ENABLED:
-        print("🔄 Loading ML models...")
-        ml_integration.load_models()
-        
+    # Initialization status tracking
+    db_ok = True
+    try:
+        init_database()
+    except Exception as e:
+        db_ok = False
+        print(f"[ERROR] Database connection failed: {e}")
+
+    llm_ok = False
+    if AGRI_CHAT_ENABLED:
+        llm_ok = agri_chat_service.load_agri_chat_model()  # Checks Gemini API Key
+
+    # Verify local Keras models
+    keras_ok = False
+    if KERAS_ENABLED:
+        try:
+            keras_disease_service.load_keras_model()
+            keras_ok = keras_disease_service.is_ready()
+        except Exception as e:
+            print(f"[ERROR] Keras/ViT Model Loading Exception: {e}")
+            keras_ok = False
+
+
+    # Load Crop Recommendation Models
+    ml_integration.load_models()
+    crop_ok = ml_integration.get_crop_model_status()
+
+    # Final Consolidated Status
+    if db_ok and llm_ok and keras_ok and crop_ok:
+        print("\n" + "="*40)
+        print(" [OK] AGROMIND-AI CONNECTED SUCCESSFULLY")
+        print(f" - LLM: Gemini 3 Flash Preview (Cloud)")
+        print(f" - Disease Models: {int(keras_ok)}/1 Ready")
+        print(f" - Crop Model: {'Ready' if crop_ok else 'Fallback Mode'}")
+        print("="*40 + "\n")
+    else:
+        print("\n" + "!"*40)
+        print(" [WARN] AGROMIND-AI PARTIALLY CONNECTED")
+        if not db_ok: print(" - Database: NOT CONNECTED")
+        if not llm_ok: print(" - LLM (Gemini API): NOT CONNECTED")
+        if not keras_ok: print(" - Disease Analysis (ViT/Local): FAILED TO LOAD")
+        if not crop_ok: print(" - Crop Model: LOADED FALLBACK ONLY")
+
+        print("!"*40 + "\n")
+
     yield
-    
-    # Shutdown logic
-    print("🛑 Shutting down Agromind AI Backend...")
+    # Shutting down Agromind AI Backend...
 
 app = FastAPI(title="Agromind AI Backend", lifespan=lifespan)
 
-# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -137,8 +215,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Static files
-app.mount("/static", StaticFiles(directory="static"), name="static")
+# --- Unified Frontend Serving ---
+# This ensures images, JS, CSS, and HTML all work on the same port
+FRONTEND_DIST = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "frontend", "dist"))
+
+if os.path.exists(FRONTEND_DIST):
+    # 1. Mount the entire dist folder at the root
+    # Note: We must do this AFTER defining API routes to avoid conflicts
+    print(f"[OK] Serving Frontend from: {FRONTEND_DIST}")
+else:
+    print(f"[WARN] Frontend dist folder not found at {FRONTEND_DIST}. Run 'npm run build' first.")
+
+app.mount("/static", StaticFiles(directory=os.path.join(os.path.dirname(__file__), "static")), name="static")
 
 # ============ MODELS ============
 class SignupRequest(BaseModel):
@@ -147,7 +235,7 @@ class SignupRequest(BaseModel):
     password: str
 
 class SigninRequest(BaseModel):
-    email: str  # Changed from username to email
+    email: str
     password: str
 
 class PostCreate(BaseModel):
@@ -159,13 +247,8 @@ class AnswerCreate(BaseModel):
     content: str
 
 class CropRecommendationRequest(BaseModel):
-    N: float
-    P: float
-    K: float
-    temperature: float
-    humidity: float
-    ph: float
-    rainfall: float
+    N: float; P: float; K: float
+    temperature: float; humidity: float; ph: float; rainfall: float
 
 class TranslateRequest(BaseModel):
     text: str
@@ -175,17 +258,15 @@ class TranslateRequest(BaseModel):
 class ChatMessage(BaseModel):
     message: str
     language: str = 'en'
+    history: Optional[List[Dict[str, str]]] = None
 
 # ============ AUTH HELPERS ============
 def get_current_user_id(authorization: Optional[str] = Header(None)) -> str:
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Not authenticated")
     token = authorization.replace("Bearer ", "")
-    
-    # Validate token exists in database
     with get_db() as conn:
-        cursor = conn.execute("SELECT id FROM users WHERE id = ?", (token,))
-        user = cursor.fetchone()
+        user = conn.execute("SELECT id FROM users WHERE id = ?", (token,)).fetchone()
         if not user:
             raise HTTPException(status_code=401, detail="Invalid token")
         return user["id"]
@@ -193,451 +274,362 @@ def get_current_user_id(authorization: Optional[str] = Header(None)) -> str:
 # ============ AUTH ENDPOINTS ============
 @app.post("/api/v1/auth/signup")
 async def signup(request: SignupRequest):
-    """Simple signup - stores user in database"""
-    # Trim whitespace from inputs
     username = request.username.strip()
     email = request.email.strip()
     password = request.password.strip()
-    
-    print(f"📝 Signup attempt - Username: '{username}', Email: '{email}'")
-    
     with get_db() as conn:
-        # Check if user exists
-        cursor = conn.execute("SELECT * FROM users WHERE username = ? OR email = ?", 
-                            (username, email))
-        if cursor.fetchone():
-            print(f"❌ User already exists: {username}")
-            raise HTTPException(status_code=400, detail="Username or email already exists")
-        
-        # Create new user
+        if conn.execute("SELECT id FROM users WHERE username = ? OR email = ?", (username, email)).fetchone():
+            raise HTTPException(status_code=400, detail="User already exists")
         user_id = str(uuid.uuid4())
-        conn.execute(
-            "INSERT INTO users (id, username, email, password) VALUES (?, ?, ?, ?)",
-            (user_id, username, email, password)
-        )
-        print(f"✅ User created: {username}")
+        conn.execute("INSERT INTO users (id, username, email, password) VALUES (?, ?, ?, ?)", 
+                    (user_id, username, email, password))
         return {"token": user_id, "username": username}
 
 @app.post("/api/v1/auth/signin")
 async def signin(request: SigninRequest):
-    """Signin with email and password"""
-    # Trim whitespace from inputs
-    email = request.email.strip().lower()  # Email should be case-insensitive
+    email = request.email.strip().lower()
     password = request.password.strip()
-    
-    print(f"🔍 Signin attempt - Email: '{email}', Password length: {len(password)}")
-    
     with get_db() as conn:
-        # Find user by email
-        cursor = conn.execute("SELECT * FROM users WHERE LOWER(email) = ?", (email,))
-        user = cursor.fetchone()
-        
+        user = conn.execute("SELECT * FROM users WHERE LOWER(email) = ?", (email,)).fetchone()
         if not user:
-            print(f"❌ User not found with email: {email}")
-            raise HTTPException(status_code=401, detail="Invalid email or password")
-        
-        print(f"✅ User found: {user['username']} ({email})")
-        print(f"🔑 Stored password: '{user['password']}', Input password: '{password}'")
-        
-        # Check password
+            raise HTTPException(status_code=401, detail="Invalid credentials")
         if user["password"] != password:
-            print(f"❌ Password mismatch!")
-            raise HTTPException(status_code=401, detail="Invalid email or password")
-        
-        print(f"✅ Login successful for: {user['username']}")
+            raise HTTPException(status_code=401, detail="Invalid credentials")
+        return {"token": user["id"], "username": user["username"]}
         return {"token": user["id"], "username": user["username"]}
 
 @app.get("/api/v1/auth/me")
 async def get_current_user(current_user_id: str = Depends(get_current_user_id)):
     with get_db() as conn:
-        cursor = conn.execute("SELECT id, username, email FROM users WHERE id = ?", (current_user_id,))
-        user = cursor.fetchone()
+        user = conn.execute("SELECT id, username, email FROM users WHERE id = ?", (current_user_id,)).fetchone()
         return dict(user)
-
-# ============ COMMUNITY ENDPOINTS ============
-@app.get("/api/v1/community/posts")
-async def get_posts():
-    with get_db() as conn:
-        cursor = conn.execute("""
-            SELECT p.*, u.username, 
-                   (SELECT COUNT(*) FROM answers WHERE post_id = p.id) as answer_count
-            FROM posts p
-            JOIN users u ON p.user_id = u.id
-            ORDER BY p.created_at DESC
-        """)
-        posts = [dict(row) for row in cursor.fetchall()]
-        return {"posts": posts}
-
-@app.post("/api/v1/community/posts", status_code=201)
-async def create_post(
-    title: str = Form(...),
-    content: str = Form(...),
-    category: Optional[str] = Form(None),
-    image: Optional[UploadFile] = File(None),
-    current_user_id: str = Depends(get_current_user_id)
-):
-    image_url = None
-    if image:
-        # Save image
-        upload_dir = "static/uploads"
-        os.makedirs(upload_dir, exist_ok=True)
-        # Generate unique filename
-        filename = f"{current_user_id}_{int(time.time())}_{image.filename}"
-        file_path = os.path.join(upload_dir, filename)
-        
-        # Write file
-        with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(image.file, buffer)
-            
-        # URL for frontend (needs /static/ prefix)
-        image_url = f"/static/uploads/{filename}"
-    
-    with get_db() as conn:
-        cursor = conn.execute(
-            "INSERT INTO posts (user_id, title, content, category, image_url) VALUES (?, ?, ?, ?, ?)",
-            (current_user_id, title, content, category, image_url)
-        )
-        post_id = cursor.lastrowid
-        cursor = conn.execute("""
-            SELECT p.*, u.username FROM posts p
-            JOIN users u ON p.user_id = u.id
-            WHERE p.id = ?
-        """, (post_id,))
-        row = cursor.fetchone()
-    
-    return dict(row)
-
-@app.delete("/api/v1/community/posts/{post_id}", status_code=204)
-async def delete_post(post_id: int, current_user_id: str = Depends(get_current_user_id)):
-    with get_db() as conn:
-        cursor = conn.execute("SELECT * FROM posts WHERE id = ?", (post_id,))
-        row = cursor.fetchone()
-        if not row:
-            raise HTTPException(status_code=404, detail="Post not found")
-        if row["user_id"] != current_user_id:
-            raise HTTPException(status_code=403, detail="Not authorized")
-        
-        conn.execute("DELETE FROM posts WHERE id = ?", (post_id,))
-
-@app.get("/api/v1/community/posts/{post_id}/answers")
-async def get_answers(post_id: int):
-    with get_db() as conn:
-        cursor = conn.execute("""
-            SELECT a.*, u.username FROM answers a
-            JOIN users u ON a.user_id = u.id
-            WHERE a.post_id = ?
-            ORDER BY a.created_at ASC
-        """, (post_id,))
-        answers = [dict(row) for row in cursor.fetchall()]
-        return {"answers": answers}
-
-@app.post("/api/v1/community/posts/{post_id}/answers", status_code=201)
-async def create_answer(
-    post_id: int,
-    answer_data: AnswerCreate,
-    current_user_id: str = Depends(get_current_user_id)
-):
-    with get_db() as conn:
-        cursor = conn.execute(
-            "INSERT INTO answers (post_id, user_id, content) VALUES (?, ?, ?)",
-            (post_id, current_user_id, answer_data.content)
-        )
-        answer_id = cursor.lastrowid
-        cursor = conn.execute("SELECT * FROM answers WHERE id = ?", (answer_id,))
-        row = cursor.fetchone()
-    
-    return dict(row)
-
-@app.delete("/api/v1/community/answers/{answer_id}", status_code=204)
-async def delete_answer(answer_id: int, current_user_id: str = Depends(get_current_user_id)):
-    with get_db() as conn:
-        cursor = conn.execute("SELECT * FROM answers WHERE id = ?", (answer_id,))
-        row = cursor.fetchone()
-        if not row:
-            raise HTTPException(status_code=404, detail="Answer not found")
-        if row["user_id"] != current_user_id:
-            raise HTTPException(status_code=403, detail="Not authorized to delete this answer")
-        conn.execute("DELETE FROM answers WHERE id = ?", (answer_id,))
 
 # ============ ML ENDPOINTS ============
 @app.post("/api/v1/ml/crop-recommendation")
 async def get_crop_recommendation(request: CropRecommendationRequest):
-    """Get ML-based crop recommendation"""
-    if not ML_ENABLED:
-        raise HTTPException(
-            status_code=503, 
-            detail="ML module not enabled."
-        )
-    
+    if not ML_ENABLED: raise HTTPException(status_code=503, detail="ML disabled")
     try:
-        result = ml_integration.predict_crop(
-            N=request.N,
-            P=request.P,
-            K=request.K,
-            temperature=request.temperature,
-            humidity=request.humidity,
-            ph=request.ph,
-            rainfall=request.rainfall
-        )
-        return result
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Prediction error: {str(e)}")
+        return ml_integration.predict_crop(N=request.N, P=request.P, K=request.K, 
+                                        temperature=request.temperature, humidity=request.humidity, 
+                                        ph=request.ph, rainfall=request.rainfall)
+    except Exception as e: raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/v1/ml/pest-detection")
-async def detect_pest(image: UploadFile = File(...)):
-    """Detect pest from uploaded image using ML model"""
-    if not ML_ENABLED:
-        raise HTTPException(
-            status_code=503, 
-            detail="ML module not enabled."
-        )
+async def detect_pest_and_disease(image: UploadFile = File(...), model: str = Form('resnet50')):
+    if not ML_ENABLED: raise HTTPException(status_code=503, detail="ML disabled")
+    if not image.content_type.startswith("image/"): raise HTTPException(status_code=400, detail="Not an image")
+    try:
+        img_bytes = await image.read()
+        pest_res = ml_integration.predict_pest(img_bytes, model=model)
+        disease_res = ml_integration.predict_disease(img_bytes)
+        
+        pest_conf = pest_res.get("confidence", 0)
+        disease_conf = disease_res.get("confidence", 0)
+        
+        if disease_res.get("is_healthy"):
+            primary, recommendation = "healthy", "✅ Your plant appears healthy!"
+        elif (disease_conf > pest_conf and disease_conf >= 25) or (disease_conf >= 25 and not pest_res.get("pest")):
+            primary, recommendation = "disease", f"🦠 Disease: {disease_res.get('disease')} detected."
+        elif pest_conf >= 25:
+            primary, recommendation = "pest", f"🐛 Pest: {pest_res.get('pest')} detected."
+        else:
+            primary, recommendation = "healthy", "🌱 No significant issues identified."
+            
+        return {
+            "pest_detection": pest_res,
+            "disease_detection": disease_res,
+            "primary_issue": primary,
+            "recommendation": recommendation,
+            "combined_confidence": max(pest_conf, disease_conf)
+        }
+    except Exception as e: raise HTTPException(status_code=500, detail=str(e))
 
+
+# ============ YOLO PLANT DISEASE DETECTION + AI RECOMMENDATION ============
+class DetectRequest(BaseModel):
+    language: str = 'en'
+
+@app.post("/api/v1/ml/detect")
+async def detect_plant_diseases(
+    image: UploadFile = File(...),
+    language: str = Form('en'),
+    conf: float = Form(0.25),
+):
     if not image.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="File must be an image")
-    
+
     try:
-        image_bytes = await image.read()
-        result = ml_integration.predict_pest(image_bytes)
-        
-        if result.get("method") == "error":
-            # Don't fail, just return the error info with 200 OK so frontend can display it
-            return result
-        
-        return result
-    except HTTPException:
-        raise
+        img_bytes = await image.read()
+        detections = None
+        model_used = "None"
+
+        # Tier 1: Keras (Primary leaf model)
+        if KERAS_ENABLED and keras_disease_service.is_ready():
+            try:
+                detections = keras_disease_service.predict_disease(img_bytes)
+                if detections:
+                    # Implement Confidence Threshold for Tier 1 Fallback
+                    keras_conf = detections[0].get("confidence", 0.0)
+                    if keras_conf < 10.0:
+                        # Only fallback if ViT is extremely unsure (Threshold lowered from 15 -> 10)
+                        detections = None
+                    else:
+                        model_used = "Keras (pwp)"
+            except:
+                pass
+
+        # Tier 2: Gemini Vision (Expert Diagnostic Pass)
+        # Consolidate detection + recommendation here for best performance
+        if not detections:
+            from services import gemini_service
+            
+            # 0. Check Cache First
+            import hashlib
+            img_hash = hashlib.md5(img_bytes).hexdigest()
+            cached = get_cached_response(["vision", img_hash])
+            if cached:
+                res_text = cached
+            else:
+                prompt = (
+                    "You are an expert plant pathologist with 20 years experience.\n"
+                    "Analyze this plant leaf and provide EXACTLY the following structure:\n"
+                    "1. Common Name of Disease (Line 1 only)\n"
+                    "2. Brief 1-sentence description (Line 2)\n"
+                    "3. Estimated Infection Severity Score (0-100) based on visible damage (Line 3 only)\n"
+                    "4. Detailed and comprehensive prevention and treatment plan of approximately 100 words (Remaining lines).\n"
+                    "If healthy, start Line 1 with 'Healthy (Good Plant)' and Line 3 with an estimated Health Confidence Score (e.g., 95)."
+                )
+                res_text = gemini_service.analyze_image(img_bytes, prompt)
+                set_cached_response(["vision", img_hash], res_text)
+            
+            if res_text:
+                lines = [l.strip() for l in res_text.split('\n') if l.strip()]
+                is_healthy = "Healthy" in lines[0] if lines else False
+                
+                disease_name = "Healthy" if is_healthy else (lines[0] if lines else "Unknown")
+                desc = "Plant is in good condition." if is_healthy else (lines[1] if len(lines) > 1 else "Signs of infection detected.")
+                
+                # Extract severity from Line 3 if possible
+                severity_val = 0.0
+                if len(lines) > 2:
+                    try:
+                        # Clean line 3 to just numbers
+                        import re
+                        match = re.search(r'(\d+)', lines[2])
+                        if match:
+                            severity_val = float(match.group(1))
+                    except:
+                        severity_val = 90.0 if not is_healthy else 0.0
+
+                recommendation = "\n".join(lines[3:]) if not is_healthy else ""
+                if is_healthy:
+                    recommendation = "• Maintain consistent watering\n• Ensure good sunlight\n• Monitor for pests weekly\n• Use organic compost"
+
+                detections = [{
+                    "disease": disease_name,
+                    "crop": "Verified Crop",
+                    "confidence": severity_val,
+                    "is_healthy": is_healthy,
+                    "label": disease_name,
+                    "description": desc,
+                    "recommendation": recommendation,
+                    "severity_percentage": severity_val
+                }]
+                model_used = "Gemini Expert Vision"
+
+        # Step 2: Ensure AI Recommendations are populated if Keras was used
+        if model_used == "Keras (pwp)":
+            import asyncio
+            loop = asyncio.get_event_loop()
+            detections = await loop.run_in_executor(
+                None,
+                recommendation_service.generate_batch_recommendations,
+                detections,
+                "en"
+            )
+            for det in detections:
+                det["severity_percentage"] = det.get("confidence", 85.0)
+
+        # Step 3: Return final result (Gemini results already have recommendations)
+        return {
+            "success": True,
+            "model_used": model_used,
+            "detections": detections
+        }
+
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Pest detection error: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e),
+            "model_used": "System Error",
+            "detections": []
+        }
+
+
+@app.get("/api/v1/ml/detect/status")
+async def yolo_model_status():
+    if YOLO_ENABLED:
+        return yolo_disease_service.get_model_status()
+    return {"yolo_loaded": False, "model_exists": False}
 
 # ============ TRANSLATION & CHATBOT ENDPOINTS ============
 @app.post("/api/v1/translate")
 async def translate(request: TranslateRequest):
-    """Translate text to target language"""
-    if not TRANSLATION_ENABLED:
-        return {"translated_text": request.text, "error": "Translation service not available"}
-    
+    if not TRANSLATION_ENABLED: return {"translated_text": request.text, "error": "Disabled"}
     try:
         translated = translate_text(request.text, request.target_lang, request.source_lang)
-        detected_lang = detect_language(request.text) if request.source_lang == 'auto' else request.source_lang
-        
-        return {
-            "translated_text": translated,
-            "source_lang": detected_lang,
-            "target_lang": request.target_lang
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Translation error: {str(e)}")
+        source = detect_language(request.text) if request.source_lang == 'auto' else request.source_lang
+        return {"translated_text": translated, "source_lang": source, "target_lang": request.target_lang}
+    except Exception as e: raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/v1/languages")
 async def get_languages():
-    """Get supported languages"""
-    if TRANSLATION_ENABLED:
-        return {"languages": get_supported_languages()}
-    return {"languages": {"en": "English"}}
+    return {"languages": get_supported_languages() if TRANSLATION_ENABLED else {"en": "English"}}
 
 @app.post("/api/v1/chatbot/message")
 async def chatbot_message(request: ChatMessage):
-    """Enhanced chatbot with multi-language support"""
-    try:
-        user_message = request.message
-        user_lang = request.language
+    import asyncio
+    loop = asyncio.get_event_loop()
+    
+    if AGRI_CHAT_ENABLED:
+        try:
+            # Run the heavy AI generation in a separate thread to keep the event loop free
+            response = await loop.run_in_executor(None, agri_chat_service.generate_response, request.message, request.language)
+            return response
+        except: pass
+        # Fallback is also offloaded if it grows in complexity
+        return await loop.run_in_executor(None, agri_chat_service.get_fallback_response, request.message, request.language)
         
-        # Translate to English if not English
-        if user_lang != 'en' and TRANSLATION_ENABLED:
-            user_message = translate_text(user_message, 'en', user_lang)
-        
-        # Get chatbot response (keyword-based)
-        response = get_chatbot_response(user_message.lower())
-        
-        # Translate response back to user's language
-        if user_lang != 'en' and TRANSLATION_ENABLED:
-            response = translate_text(response, user_lang, 'en')
-        
-        return {
-            "response": response,
-            "language": user_lang
-        }
-    except Exception as e:
-        return {"response": "Sorry, I encountered an error. Please try again.", "language": user_lang}
+    return {
+        'response': "Hello! I'm your farming assistant. What would you like to know? (AI service currently initializing/unavailable)",
+        'language': request.language,
+        'image_analyzed': False
+    }
 
-def get_chatbot_response(message: str) -> str:
-    """Get chatbot response based on keywords"""
-    if any(word in message for word in ['pest', 'insect', 'bug', 'aphid', 'caterpillar']):
-        return "For pest control, I recommend: 1) Use neem oil spray (organic solution), 2) Introduce natural predators like ladybugs, 3) Remove affected leaves, 4) Maintain good air circulation. Would you like to upload an image for pest identification?"
+@app.post("/api/v1/chatbot/message-with-image")
+async def chatbot_message_with_image(message: str = Form(...), language: str = Form('en'), image: Optional[UploadFile] = File(None)):
+    import asyncio
+    loop = asyncio.get_event_loop()
+    img_data = await image.read() if image else None
     
-    if any(word in message for word in ['fertilizer', 'npk', 'nutrient', 'manure']):
-        return "For fertilizer advice: 1) Get soil testing done first, 2) Use organic compost when possible, 3) NPK ratio depends on crop - Rice needs high N (90-120 kg/ha), 4) Apply in split doses for better absorption. What crop are you growing?"
-    
-    if any(word in message for word in ['water', 'irrigation', 'drip', 'sprinkler']):
-        return "Irrigation tips: 1) Drip irrigation saves 30-50% water, 2) Water early morning or evening, 3) Check soil moisture before watering, 4) Rice needs standing water, wheat needs less. What's your soil type?"
-    
-    if any(word in message for word in ['crop', 'grow', 'plant', 'cultivate', 'season']):
-        return "I can help with crop recommendations! Please use the 'Crop Advice' feature where you can enter your soil type, season, and region for AI-powered suggestions. Would you like me to guide you there?"
-    
-    if any(word in message for word in ['soil', 'ph', 'testing', 'sandy', 'clay', 'loamy']):
-        return "Soil management tips: 1) Test soil pH (ideal 6-7 for most crops), 2) Add organic matter to improve structure, 3) Rotate crops to maintain nutrients, 4) Sandy soil needs more water, clay soil needs drainage. Have you tested your soil?"
-    
-    if any(word in message for word in ['weather', 'rain', 'temperature', 'climate']):
-        return "Weather considerations: 1) Check 7-day forecast before planting, 2) Kharif crops need good monsoon, 3) Protect crops from extreme heat, 4) Ensure drainage for heavy rains. Which season are you planning for?"
-    
-    if any(word in message for word in ['disease', 'fungus', 'blight', 'rot', 'wilt']):
-        return "For plant diseases: 1) Remove infected plants immediately, 2) Use copper-based fungicides, 3) Ensure proper spacing for air circulation, 4) Avoid overhead watering. Can you describe the symptoms?"
-    
-    if any(word in message for word in ['market', 'price', 'sell', 'mandi']):
-        return "Market tips: 1) Check local mandi prices regularly, 2) Consider contract farming for assured prices, 3) Store produce properly to reduce losses, 4) Join farmer cooperatives for better rates. What crop are you selling?"
-    
-    return "Hello! I'm your farming assistant. I can help with: 🌾 Crop recommendations, 🐛 Pest control, 💧 Irrigation advice, 🌱 Soil management, 🌤️ Weather tips. What would you like to know?"
+    if AGRI_CHAT_ENABLED:
+        try:
+            response = await loop.run_in_executor(None, agri_chat_service.generate_response, message, language, img_data)
+            return response
+        except: pass
+        return await loop.run_in_executor(None, agri_chat_service.get_fallback_response, message, language)
+        
+    return {
+        'response': "Hello! I'm your farming assistant. What would you like to know? (AI service currently initializing/unavailable)",
+        'language': language,
+        'image_analyzed': False
+    }
 
-# ============ OCR ENDPOINT ============
-@app.post("/api/v1/ocr/extract")
-async def extract_text_from_document(file: UploadFile = File(...)):
-    """Extract text from uploaded document using Hugging Face OCR"""
-    if not OCR_ENABLED:
-        raise HTTPException(
-            status_code=503,
-            detail="OCR service not available. Install: pip install easyocr"
-        )
-    
-    if not file.content_type.startswith("image/"):
-        raise HTTPException(status_code=400, detail="File must be an image")
-    
-    try:
-        image_bytes = await file.read()
-        result = huggingface_ocr.extract_text_from_image(image_bytes)
-        
-        if not result["success"]:
-            raise HTTPException(status_code=500, detail=result.get("error", "OCR failed"))
-        
-        analysis = huggingface_ocr.analyze_document(result["extracted_text"])
-        
-        return {
-            "success": True,
-            "extracted_text": result["extracted_text"],
-            "confidence": result.get("confidence", 0),
-            "num_lines": result.get("num_lines", 0),
-            "analysis": analysis.get("analysis", ""),
-            "method": result.get("method", "easyocr")
-        }
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"OCR error: {str(e)}")
+@app.get("/api/v1/chatbot/status")
+async def chatbot_status():
+    if AGRI_CHAT_ENABLED: return agri_chat_service.get_model_status()
+    return {"loaded": False, "model_name": "fallback"}
+
 
 # ============ COMMUNITY ENDPOINTS ============
-
 @app.get("/api/v1/community/posts")
 async def get_posts():
-    """Get all community posts"""
     with get_db() as conn:
         cursor = conn.execute("""
-            SELECT p.*, u.username, 
-            (SELECT COUNT(*) FROM answers WHERE post_id = p.id) as answer_count
-            FROM posts p
-            JOIN users u ON p.user_id = u.id
-            ORDER BY p.created_at DESC
+            SELECT p.*, u.username, (SELECT COUNT(*) FROM answers WHERE post_id = p.id) as answer_count
+            FROM posts p JOIN users u ON p.user_id = u.id ORDER BY p.created_at DESC
         """)
-        posts = [dict(row) for row in cursor.fetchall()]
-        return {"posts": posts}
+        return {"posts": [dict(r) for r in cursor.fetchall()]}
 
-# Duplicate create_post removed
+@app.post("/api/v1/community/posts", status_code=201)
+async def create_post(title: str = Form(...), content: str = Form(...), category: Optional[str] = Form(None), 
+                    image: Optional[UploadFile] = File(None), current_user_id: str = Depends(get_current_user_id)):
+    image_url = None
+    if image:
+        upload_dir = "static/uploads"
+        os.makedirs(upload_dir, exist_ok=True)
+        filename = f"{current_user_id}_{int(time.time())}_{image.filename}"
+        with open(os.path.join(upload_dir, filename), "wb") as buffer:
+            shutil.copyfileobj(image.file, buffer)
+        image_url = f"/static/uploads/{filename}"
+    
+    with get_db() as conn:
+        cursor = conn.execute("INSERT INTO posts (user_id, title, content, category, image_url) VALUES (?, ?, ?, ?, ?)",
+                            (current_user_id, title, content, category, image_url))
+        post_id = cursor.lastrowid
+        row = conn.execute("SELECT p.*, u.username FROM posts p JOIN users u ON p.user_id = u.id WHERE p.id = ?", (post_id,)).fetchone()
+    return dict(row)
 
 @app.get("/api/v1/community/posts/{post_id}")
 async def get_post_details(post_id: int):
-    """Get post details with answers"""
     with get_db() as conn:
-        # Get post
-        cursor = conn.execute("""
-            SELECT p.*, u.username 
-            FROM posts p
-            JOIN users u ON p.user_id = u.id
-            WHERE p.id = ?
-        """, (post_id,))
-        post = cursor.fetchone()
-        
-        if not post:
-            raise HTTPException(status_code=404, detail="Post not found")
-            
+        post = conn.execute("SELECT p.*, u.username FROM posts p JOIN users u ON p.user_id = u.id WHERE p.id = ?", (post_id,)).fetchone()
+        if not post: raise HTTPException(status_code=404, detail="Post not found")
         post_dict = dict(post)
-        
-        # Get answers
-        cursor = conn.execute("""
-            SELECT a.*, u.username
-            FROM answers a
-            JOIN users u ON a.user_id = u.id
-            WHERE a.post_id = ?
-            ORDER BY a.created_at ASC
-        """, (post_id,))
-        answers = [dict(row) for row in cursor.fetchall()]
-        
-        post_dict["answers"] = answers
+        cursor = conn.execute("SELECT a.*, u.username FROM answers a JOIN users u ON a.user_id = u.id WHERE a.post_id = ? ORDER BY a.created_at ASC", (post_id,))
+        post_dict["answers"] = [dict(r) for r in cursor.fetchall()]
         return post_dict
 
-@app.post("/api/v1/community/posts/{post_id}/answers")
-async def create_answer(post_id: int, answer: AnswerCreate, current_user_id: str = Depends(get_current_user_id)):
-    """Add an answer to a post"""
-    with get_db() as conn:
-        # Check if post exists
-        cursor = conn.execute("SELECT id FROM posts WHERE id = ?", (post_id,))
-        if not cursor.fetchone():
-            raise HTTPException(status_code=404, detail="Post not found")
-            
-        # Add answer
-        conn.execute(
-            "INSERT INTO answers (post_id, user_id, content) VALUES (?, ?, ?)",
-            (post_id, current_user_id, answer.content)
-        )
-        return {"message": "Answer added successfully"}
-
-@app.delete("/api/v1/community/posts/{post_id}")
+@app.delete("/api/v1/community/posts/{post_id}", status_code=204)
 async def delete_post(post_id: int, current_user_id: str = Depends(get_current_user_id)):
-    """Delete a post (owner only)"""
     with get_db() as conn:
-        cursor = conn.execute("SELECT user_id FROM posts WHERE id = ?", (post_id,))
-        post = cursor.fetchone()
-        
-        if not post:
-            raise HTTPException(status_code=404, detail="Post not found")
-            
-        if post["user_id"] != current_user_id:
-            raise HTTPException(status_code=403, detail="Not authorized to delete this post")
-            
+        post = conn.execute("SELECT user_id FROM posts WHERE id = ?", (post_id,)).fetchone()
+        if not post: raise HTTPException(status_code=404, detail="Post not found")
+        if post["user_id"] != current_user_id: raise HTTPException(status_code=403, detail="Not authorized")
         conn.execute("DELETE FROM posts WHERE id = ?", (post_id,))
-        return {"message": "Post deleted successfully"}
 
-@app.delete("/api/v1/community/answers/{answer_id}")
-async def delete_answer(answer_id: int, current_user_id: str = Depends(get_current_user_id)):
-    """Delete an answer (owner only)"""
+@app.post("/api/v1/community/posts/{post_id}/answers", status_code=201)
+async def create_answer(post_id: int, answer: AnswerCreate, current_user_id: str = Depends(get_current_user_id)):
     with get_db() as conn:
-        cursor = conn.execute("SELECT user_id FROM answers WHERE id = ?", (answer_id,))
-        answer = cursor.fetchone()
-        
-        if not answer:
-            raise HTTPException(status_code=404, detail="Answer not found")
-            
-        if answer["user_id"] != current_user_id:
-            raise HTTPException(status_code=403, detail="Not authorized to delete this answer")
-            
+        if not conn.execute("SELECT id FROM posts WHERE id = ?", (post_id,)).fetchone():
+            raise HTTPException(status_code=404, detail="Post not found")
+        conn.execute("INSERT INTO answers (post_id, user_id, content) VALUES (?, ?, ?)", (post_id, current_user_id, answer.content))
+        return {"message": "Success"}
+
+@app.delete("/api/v1/community/answers/{answer_id}", status_code=204)
+async def delete_answer(answer_id: int, current_user_id: str = Depends(get_current_user_id)):
+    with get_db() as conn:
+        answer = conn.execute("SELECT user_id FROM answers WHERE id = ?", (answer_id,)).fetchone()
+        if not answer: raise HTTPException(status_code=404, detail="Not found")
+        if answer["user_id"] != current_user_id: raise HTTPException(status_code=403, detail="Not authorized")
         conn.execute("DELETE FROM answers WHERE id = ?", (answer_id,))
-        return {"message": "Answer deleted successfully"}
+
+@app.post("/api/v1/community/answers/{answer_id}/{action}")
+async def react_to_answer(answer_id: int, action: str, current_user_id: str = Depends(get_current_user_id)):
+    if action not in ["like", "dislike", "unlike"]: raise HTTPException(status_code=400, detail="Invalid action")
+    
+    with get_db() as conn:
+        if not conn.execute("SELECT id FROM answers WHERE id = ?", (answer_id,)).fetchone():
+            raise HTTPException(status_code=404, detail="Not found")
+        
+        if action == "like":
+            conn.execute("UPDATE answers SET likes = likes + 1 WHERE id = ?", (answer_id,))
+            column = "likes"
+        elif action == "dislike":
+            conn.execute("UPDATE answers SET dislikes = dislikes + 1 WHERE id = ?", (answer_id,))
+            column = "dislikes"
+        elif action == "unlike":
+            # Logic: unlike usually means removing a previous like
+            conn.execute("UPDATE answers SET likes = MAX(0, likes - 1) WHERE id = ?", (answer_id,))
+            column = "likes"
+            
+        count = conn.execute(f"SELECT {column} FROM answers WHERE id = ?", (answer_id,)).fetchone()[0]
+    return {column: count}
 
 # ============ ROOT & MAIN ============
-@app.get("/")
-async def root():
-    return FileResponse("static/index.html")
-
-
+# Root API status moved to /api/v1/status to avoid conflict with frontend
+@app.get("/api/v1/status")
+async def api_status(): 
+    return {
+        "status": "online",
+        "message": "Agromind AI Backend API is running.",
+        "version": "1.2.0"
+    }
 
 if __name__ == "__main__":
     import uvicorn
-    import os
-    
-    # Get config from env or default to localhost
-    HOST = os.getenv("HOST", "127.0.0.1")
-    PORT = int(os.getenv("PORT", "8000"))
-    
-    print("\n" + "="*50)
-    print(f"✅ Agromind AI Backend started on port {PORT}")
-    print(f"👉 Open in browser: http://{HOST}:{PORT}")
-    print("="*50)
-    
-    uvicorn.run(app, host=HOST, port=PORT)
+    # Mount the frontend last to ensure API routes take precedence
+    if os.path.exists(FRONTEND_DIST):
+        app.mount("/", StaticFiles(directory=FRONTEND_DIST, html=True), name="frontend")
+        
+    uvicorn.run(app, host=os.getenv("HOST", "127.0.0.1"), port=int(os.getenv("PORT", "8000")))

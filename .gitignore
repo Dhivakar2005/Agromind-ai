@@ -47,6 +47,8 @@ dist/
 .idea/
 *.swp
 *.swo
+.gemini/
+brain/
 
 # --- Logs & OS ---
 *.log
@@ -61,4 +63,13 @@ frontend/public/uploads/
 # ML Data & Models (Large files)
 *.pth
 *.h5
+*.keras
+*.joblib
+*.pt
+*.onnx
+*.zip
+*.csv
 backend/ml_models/**/data/
+backend/ml_models/**/dataset/
+plant_disease_model.h5
+

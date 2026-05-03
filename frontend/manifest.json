@@ -1,0 +1,23 @@
+{
+  "name": "Agromind AI - Future of Farming",
+  "short_name": "Agromind AI",
+  "description": "AI-powered farming assistant for crop health and intelligence.",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#050a08",
+  "theme_color": "#10b981",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "agromind_app_icon_1777785887102.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "agromind_app_icon_1777785887102.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}

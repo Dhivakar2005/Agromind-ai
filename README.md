@@ -1,104 +1,106 @@
-# 🌱 Agromind AI
+# 🌱 Agromind AI: The Cinematic Smart Farming Assistant
 
-**Agromind AI** is a next-generation "Cinematic" Smart Farming Assistant designed for modern agriculture. It combines advanced AI tools (Computer Vision, NLP, Speech) with a premium, accessible user interface featuring glassmorphism, smooth animations, and deep visual immersion.
-
-![Status](https://img.shields.io/badge/Status-Production%20Ready-success)
-![Python](https://img.shields.io/badge/Python-3.12-blue)
-![License](https://img.shields.io/badge/License-MIT-green)
+**Agromind AI** is an advanced, "Cinematic" farming ecosystem designed to bridge the gap between traditional agriculture and cutting-edge Artificial Intelligence. Featuring a premium **Glassmorphism UI**, the platform provides farmers with real-time disease diagnostics, multilingual support, and intelligent crop recommendations.
 
 ---
 
-## 🚀 Key Features
+## 🛠️ Technology Stack
 
-### 🌟 Cinematic Experience
-*   **Immersive Design:** Full-screen hero backgrounds with pan-and-zoom animations.
-*   **Glassmorphism:** Frosted glass cards, neon glows, and gradient typography (`Outfit` font).
-*   **Split-Screen Auth:** Modern Sign-In/Sign-Up pages with animated storytelling visuals.
-*   **Responsive:** Optimized for Mobile, Tablet, and Desktop.
+Agromind AI leverages a modern, distributed architecture to ensure high performance and scalability.
 
-### 🛠 AI-Powered Tools
-1.  **🔍 Pest Doctor:**
-    *   **Visual Detection:** Upload photos of crops to identify pests and diseases.
-    *   **Actionable Reports:** Get detailed **Treatment Plans** and **Prevention Guides**.
-    *   **Confidence Scores:** Transparent AI confidence metrics.
+### **Frontend (Visual Engine)**
+*   **Engine:** [Vite](https://vitejs.dev/) (Lightning-fast build tool)
+*   **Structure:** Semantic HTML5 & Vanilla JavaScript (ES6+)
+*   **Aesthetics:** Modern CSS3 featuring:
+    *   **Glassmorphism:** Frosted glass effect components.
+    *   **Neon Design System:** Custom-curated glow presets for dark mode.
+    *   **Immersive FX:** Pan-and-zoom backgrounds and smooth micro-animations.
+*   **Typography:** [Outfit](https://fonts.google.com/specimen/Outfit) via Google Fonts.
 
-2.  **🌾 Smart Crop Advisor:**
-    *   **Precision Recommendation:** Suggests optimal crops based on NPK values, rainfall, and temperature.
-    *   **Rich Insights:** Detailed cards showing expected yield, growing duration, and water requirements.
+### **Backend (Intelligence Layer)**
+*   **Core:** [FastAPI](https://fastapi.tiangolo.com/) (High-performance Python framework)
+*   **Server:** Uvicorn with ASGI support.
+*   **Database:** [SQLite](https://www.sqlite.org/) for lightweight, robust local data persistence.
+*   **Integration:** RESTful API architecture with tiered error handling.
 
-3.  **💬 Farmer Community:**
-    *   **Threaded Discussions:** Ask questions and get answers in a modern forum layout.
-    *   **Visual Feed:** Card-based feed with user avatars and tags.
-
-4.  **🤖 Voice Assistant:**
-    *   **Multilingual Support:** Speak in Hindi, Tamil, Telugu, and more.
-    *   **Text-to-Speech:** The assistant reads out answers for accessibility.
+### **AI & Machine Learning (The "Brain")**
+*   **Computer Vision (Plant Disease Detection):**
+    *   **Primary Engine:** [Vision Transformer (ViT)](https://huggingface.co/wambugu71/crop_leaf_diseases_vit) via Hugging Face. Fine-tuned for 38 classes of plant diseases with high-precision attention mechanisms.
+    *   **Secondary Fallback:** Custom **EfficientNetB4** CNN (`plant_disease_model.h5`) for rapid, high-accuracy offline analysis.
+*   **Natural Language Processing & Chatbot:**
+    *   **Core Engine:** **Ollama** running `qwen2.5:3b`. A 3-billion parameter model optimized for speed and accuracy in agricultural contexts.
+    *   **Cloud Intelligence:** Google Gemini 1.5 Flash (via API) for multi-modal reasoning and complex diagnostic synthesis.
+    *   **Translation Layer:** Multilingual support (Hindi, Tamil, Telugu, etc.) using deep learning translation models.
+*   **Predictive Analytics (Crop Recommendation):** 
+    *   **Algorithm:** **Random Forest Classifier** trained on soil NPK, pH, and climate datasets.
+    *   **Logic:** Multi-variate analysis to predict the most profitable and sustainable crop for specific environmental conditions.
 
 ---
 
-## 📦 Installation & Setup
+## 🏗️ System Architecture
 
-### 1. Prerequisites
+Agromind AI employs a **Tiered Diagnostic Strategy** for maximum reliability:
+1.  **Vision Inference:** Initial assessment using the high-accuracy Hugging Face ViT model.
+2.  **Local Fallback:** If internet is unavailable, seamlessly falls back to the local Keras weights (`plant_disease_model.h5`).
+3.  **Local LLM (Ollama):** Queries are handled locally where possible to save bandwidth and ensure privacy.
+4.  **Actionable AI:** Results from the models are passed to the LLM to generate treatment plans in the user's local language.
+
+---
+
+## 🚀 Installation & Setup
+
+### **1. Prerequisites**
 *   Python 3.10+
-*   Node.js (for the Frontend)
-*   Git
+*   Node.js (v18+)
+*   A Gemini API Key (Optional, but recommended for full AI features)
 
-### 2. Clone Repository
+### **2. Cloning the System**
 ```bash
 git clone https://github.com/Dhivakar2005/agromind-ai.git
 cd agromind-ai
 ```
 
----
-
-## 🏃‍♂️ Running the Application
-
-You will need **two terminals** running simultaneously.
-
-### Terminal 1: Backend (API)
-This powers the AI models and Database.
-
+### **3. Setting up the Backend**
 ```bash
 cd backend
-# Install dependencies (First time only)
+# Create Virtual Environment (Recommended)
+python -m venv venv
+source venv/bin/activate  # venv\Scripts\activate on Windows
+
+# Install Requirements
 pip install -r requirements.txt
 
-# Run Server (Windows)
-py unified_backend.py
-
-# Run Server (Mac/Linux)
-python3 unified_backend.py
+# Launch Service
+python unified_backend.py
 ```
-✅ *The backend runs on http://127.0.0.1:8000*
+*Backend runs at http://127.0.0.1:8000*
 
-### Terminal 2: Frontend (UI)
-This runs the modern web interface.
-
+### **4. Setting up the Frontend**
 ```bash
 cd frontend
-# Install dependencies (First time only)
+# Install dependencies
 npm install
 
-# Start Development Server
+# Launch Development Server
 npm run dev
 ```
-✅ *The frontend runs on http://localhost:3000*
+*Frontend runs at http://localhost:5173 (default Vite port)*
 
 ---
 
+## 🌟 Key Features
 
-## 🔧 Troubleshooting
-
-*   **"Python not found":** Try using `py` instead of `python` in your terminal commands.
-*   **"Vite not found":** Make sure you ran `npm install` inside the `frontend` folder first.
-*   **API Errors:** Ensure the backend terminal is open and running properly on port 8000.
+*   **Pest Doctor:** Advanced pest and disease identification with confidence scores and severity analysis.
+*   **Smart Crop Advisor:** Data-driven crop recommendations based on soil NPK, pH, and climate data.
+*   **Agromind Assistant:** Multilingual AI chatbot ready to answer complex agricultural queries.
+*   **Community Feed:** A localized forum for farmers to share knowledge and discuss challenges.
 
 ---
 
-## 🤝 Contributing
+## 🤝 Contribution & License
 
-1.  Fork the project
-2.  Create your feature branch (`git checkout -b feature/NewFeature`)
-3.  Commit your changes (`git commit -m 'Add NewFeature'`)
-4.  Push to the branch (`git push origin feature/NewFeature`)
-5.  Open a Pull Request
+We welcome contributions! Please follow the standard "Fork-Branch-Pull" workflow.
+Distributed under the **MIT License**. See `LICENSE` for more information.
+
+---
+*Created with ❤️ for the farming community.*

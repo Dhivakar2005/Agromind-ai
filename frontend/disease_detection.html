@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Disease Detection - Agromind AI</title>
+    <link rel="stylesheet" href="./assets/css/style.css">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#10b981">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Agromind AI">
+    <link rel="apple-touch-icon" href="/agromind_app_icon_1777785887102.png">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="nav-logo">Agromind AI</div>
+
+        <!-- Mobile Right Controls (Avatar + Burger) -->
+        <div class="nav-mobile-controls">
+            <!-- Mobile Avatar -->
+            <div id="mobile-avatar-btn" class="mobile-avatar-btn" style="display:none;" onclick="toggleMobileMenu()">
+                <span id="mobile-avatar-initial">U</span>
+            </div>
+            <!-- Burger Button -->
+            <button class="burger-menu" id="burger-menu" aria-label="Toggle Menu">
+                <span class="burger-bar"></span>
+                <span class="burger-bar"></span>
+                <span class="burger-bar"></span>
+            </button>
+        </div>
+
+        <div class="nav-links" id="nav-links">
+            <a href="index.html" class="nav-item">Home</a>
+            <a href="crop_recommendation.html" class="nav-item">Crop Recommendation</a>
+            <a href="disease_detection.html" class="nav-item active">Disease Detection</a>
+            <a href="community.html" class="nav-item">Community</a>
+
+            <!-- Mobile-only Sign Out -->
+            <div class="mobile-user-nav" id="mobile-user-nav"></div>
+        </div>
+
+        <div class="nav-user">
+            <!-- Logged Out State -->
+            <button id="signin-btn" onclick="showPage('signin-page')" class="btn-primary nav-signin-btn">Sign In</button>
+
+            <!-- Logged In State (desktop pill) -->
+            <div id="user-profile-nav" class="user-profile-nav" style="display: none; position: relative;">
+                <span class="nav-greeting" id="nav-greeting-pill" onclick="document.getElementById('signout-btn').classList.toggle('show')">
+                    <span class="nav-greeting-text">Hello, <span id="nav-username" class="username-highlight">User</span></span>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                        stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.5; flex-shrink:0;">
+                        <polyline points="6 9 12 15 18 9" />
+                    </svg>
+                </span>
+                <div id="signout-btn" class="btn-signout-dropdown">
+                    <button onclick="handleSignout()" class="signout-item">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                            <polyline points="16 17 21 12 16 7" />
+                            <line x1="21" y1="12" x2="9" y2="12" />
+                        </svg>
+                        Sign Out
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu Overlay -->
+    <div class="mobile-overlay" id="mobile-overlay" onclick="toggleMobileMenu()"></div>
+
+    <div class="parallax-bg"></div>
+    <div class="grid-bg"></div>
+    <div class="radial-glow"></div>
+
+    <div id="pest-page" class="page active">
+        <div class="app-container" id="pest-content">
+            <!-- Content will be injected by app.js -->
+        </div>
+    </div>
+
+    <!-- Footer (Premium) -->
+<footer class="main-footer">
+    <div class="footer-top">
+        <div class="footer-brand">
+            <div class="footer-logo">Agromind AI</div>
+            <p class="footer-description">Empowering small-scale farmers with cutting-edge AI for soil health, pest
+                management, and climate resilience.</p>
+        </div>
+
+        <div class="footer-col">
+            <h4>Platform</h4>
+            <ul class="footer-links">
+                <li><a href="#features">AI Assistant</a></li>
+                <li><a href="#workflow">Plant Doctor</a></li>
+                <li><a href="#analytics">Soil Analytics</a></li>
+                <li><a href="#community">Community</a></li>
+            </ul>
+        </div>
+
+        <div class="footer-col">
+            <h4>Company</h4>
+            <ul class="footer-links">
+                <li><a href="#">About Us</a></li>
+                <li><a href="#">Sustainability</a></li>
+                <li><a href="#">Impact Report</a></li>
+                <li><a href="#">Careers</a></li>
+            </ul>
+        </div>
+
+        <div class="footer-col">
+            <h4>Support</h4>
+            <ul class="footer-links">
+                <li><a href="#">Documentation</a></li>
+                <li><a href="#">FAQ</a></li>
+                <li><a href="#">Contact Support</a></li>
+                <li><a href="#">Privacy Policy</a></li>
+            </ul>
+        </div>
+
+        <div class="footer-col">
+            <h4>Experience</h4>
+            <div class="social-links">
+                <a href="#" class="social-icon">in</a>
+                <a href="#" class="social-icon">ig</a>
+                <a href="#" class="social-icon">tw</a>
+                <a href="#" class="social-icon">fb</a>
+            </div>
+            <div class="app-badges">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Download_on_the_App_Store_Badge.svg"
+                    alt="App Store" class="app-badge-img">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg"
+                    alt="Google Play" class="app-badge-img">
+            </div>
+        </div>
+    </div>
+
+    <div class="main-footer-bottom">
+        <p>&copy; 2026 Agromind AI. All rights reserved.</p>
+        <div class="bottom-info">
+            Made with <span style="color: var(--primary);">care</span> for local farmers.
+        </div>
+    </div>
+</footer>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <!-- AI Assistant Wrapper -->
+    <div class="ai-assistant-wrapper">
+        <div id="ai-assistant-window" class="ai-assistant-window"></div>
+        <div class="ai-assistant-toggle" onclick="toggleAIAssistant()">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            </svg>
+        </div>
+    </div>
+
+    <script type="module" src="./assets/js/crops_data.js"></script>
+    <script type="module" src="./assets/js/app.js"></script>
+</body>
+</html>

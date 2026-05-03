@@ -208,7 +208,7 @@ function showFeature(feature) {
         case 'pest':
             content.innerHTML = `
                 <div class="glass-panel" style="padding: 2rem; max-width: 600px; margin: 0 auto; text-align: center;">
-                    <h2>🔍 Detect Disease & Pest</h2>
+                    <h2>Detect Disease & Pest</h2>
                     <div class="upload-section mt-4">
                         <p class="text-muted mb-4">Upload a clear photo of the affected plant leaf, stem, or fruit.</p>
                         
@@ -344,7 +344,7 @@ async function analyzePestImage() {
     }
 
     resultDiv.style.display = 'block';
-    resultDiv.innerHTML = '<p>🔍 Analyzing image...</p>';
+    resultDiv.innerHTML = '<p>Analyzing image...</p>';
 
     try {
         // Create form data with image
